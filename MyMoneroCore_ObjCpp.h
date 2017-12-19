@@ -111,6 +111,8 @@
 - (NSString *)new_long_plain_paymentID;
 - (NSString *)new_short_plain_paymentID;
 //
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID;
+//
 - (NSString *)new_fakeAddressForRCTTx;
 
 - (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey

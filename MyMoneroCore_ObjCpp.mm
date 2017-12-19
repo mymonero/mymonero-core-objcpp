@@ -362,6 +362,48 @@ using namespace epee;
 	).c_str()];
 }
 
+
+
+
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID
+{
+	std::string payment_id__string = std::string(short_paymentID.UTF8String);
+	crypto::hash8 payment_id_short;
+	bool didParse = monero_paymentID_utils::parse_short_payment_id(payment_id__string, payment_id_short);
+	if (!didParse) {
+		return nil;
+	}
+	boost::optional<monero_address_utils::DecodedAddress> optl__decoded_address = monero_address_utils::decoded_address(
+		std::string(std_address_NSString.UTF8String)
+	);
+	if (!optl__decoded_address) {
+		return nil;
+	}
+	cryptonote::account_public_address address_components = (*optl__decoded_address).address_components;
+	//
+	// NOTE: For this function, I am opting to just implement here, instead of in monero_address_utils
+	bool is_testnet = false;
+	std::string int_address_string = cryptonote::get_account_integrated_address_as_str(
+		is_testnet,
+		address_components,
+		payment_id_short
+	);
+	NSString *int_address_NSString = [NSString stringWithUTF8String:int_address_string.c_str()];
+	//
+	return int_address_NSString;
+}
+
+
+
+
+
+
+
+
+
+
+
+// WIP:
 - (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
 						   sec_spendKey:(NSString *)sec_spendKey
 					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
