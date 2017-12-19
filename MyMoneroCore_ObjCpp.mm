@@ -41,9 +41,6 @@
 #include "include_base_utils.h"
 using namespace epee;
 //
-#import <UIKit/UIKit.h> // this is dumb but necessary right now b/c brings in UIApplicationDelegate stuff at present… solve by making this a framework?
-#import "mymonero_core_swift_tests-Swift.h"
-//
 @implementation MyMoneroCore_ObjCpp
 //
 - (void)newlyCreatedWallet:(NSString *)wordsetName
@@ -365,7 +362,8 @@ using namespace epee;
 	).c_str()];
 }
 
-- (void)new_transactionWith_sec_keyDuo:(MoneroKeyDuo *)sec_keyDuo
+- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
+						   sec_spendKey:(NSString *)sec_spendKey
 					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
 							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
 							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
@@ -391,8 +389,8 @@ using namespace epee;
 		);
 	};
 	//
-	std::string sec_viewKey_string = std::string(sec_keyDuo.view.UTF8String);
-	std::string sec_spendKey_string = std::string(sec_keyDuo.spend.UTF8String);
+	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
+	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
 	//
 	uint32_t priority = 1; // TODO
 	uint64_t blockchain_size = 0; // TODO

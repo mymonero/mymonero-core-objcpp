@@ -32,4 +32,11 @@
 //  THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+// TODO
+//@class MoneroOutputDescription;
+//@class MoneroRandomAmountAndOutputs;
+//@class MoneroRandomOutputDescription;
+//@class SendFundsTargetDescription;
+//@class MoneroKeyDuo;
+
 

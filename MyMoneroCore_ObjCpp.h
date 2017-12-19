@@ -33,14 +33,7 @@
 //
 //
 #import <Foundation/Foundation.h>
-//
-// Bridged types
-@class MoneroOutputDescription;
-@class MoneroRandomAmountAndOutputs;
-@class MoneroRandomOutputDescription;
-@class SendFundsTargetDescription;
-@class MoneroKeyDuo;
-//
+#import "MoneroTypes.h"
 //
 @interface MyMoneroCore_ObjCpp : NSObject
 
@@ -120,7 +113,8 @@
 //
 - (NSString *)new_fakeAddressForRCTTx;
 
-- (void)new_transactionWith_sec_keyDuo:(MoneroKeyDuo *)sec_keyDuo
+- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
+						   sec_spendKey:(NSString *)sec_spendKey
 					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
 							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
 							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
