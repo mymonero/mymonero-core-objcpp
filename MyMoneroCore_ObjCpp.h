@@ -97,16 +97,8 @@
 															   BOOL isInViewOnlyMode
 															   )
 															  )fn;
-
-- (void)decodedAddress:(NSString *)addressString
-					fn:(void(^)(
-								NSString *errStr_orNil,
-								//
-								NSString *pub_viewKey_NSString,
-								NSString *pub_spendKey_NSString,
-								NSString *paymentID_NSString_orNil
-								)
-						)fn;
+//
+- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString;
 //
 - (NSString *)new_long_plain_paymentID;
 - (NSString *)new_short_plain_paymentID;

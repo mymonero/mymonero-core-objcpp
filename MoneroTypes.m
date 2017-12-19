@@ -33,3 +33,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MoneroTypes.h"
+
+
+@implementation Monero_DecodedAddress_RetVals
+
+@end

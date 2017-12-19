@@ -40,3 +40,12 @@
 //@class MoneroKeyDuo;
 
 
+@interface Monero_DecodedAddress_RetVals: NSObject
+
+@property (nonatomic, strong) NSString *errStr_orNil;
+
+@property (nonatomic, strong) NSString *pub_viewKey_NSString;
+@property (nonatomic, strong) NSString *pub_spendKey_NSString;
+@property (nonatomic, strong) NSString *paymentID_NSString_orNil;
+
+@end

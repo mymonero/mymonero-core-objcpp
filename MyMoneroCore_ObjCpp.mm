@@ -300,29 +300,17 @@ using namespace epee;
 	   isInViewOnlyMode
 	);
 }
-
-- (void)decodedAddress:(NSString *)addressString
-					fn:(void(^)(
-								NSString *errStr_orNil,
-								//
-								NSString *pub_spendKey_NSString,
-								NSString *pub_viewKey_NSString,
-								NSString *paymentID_NSString_orNil
-								)
-						)fn
+//
+- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString
 {
+	Monero_DecodedAddress_RetVals *retVals = [Monero_DecodedAddress_RetVals new];
+	//
 	boost::optional<monero_address_utils::DecodedAddress> optl__decoded_address = monero_address_utils::decoded_address(
 		std::string(addressString.UTF8String)
 	);
 	if (!optl__decoded_address) {
-		fn(
-		   NSLocalizedString(@"Invalid address", nil),
-		   //
-		   nil,
-		   nil,
-		   nil
-		);
-		return;
+		retVals.errStr_orNil = NSLocalizedString(@"Invalid address", nil);
+		return retVals;
 	}
 	monero_address_utils::DecodedAddress decoded_address = *optl__decoded_address;
 	cryptonote::account_public_address address = decoded_address.address_components;
@@ -337,8 +325,12 @@ using namespace epee;
 		std::string payment_id_hexString = string_tools::pod_to_hex(payment_id);
 		paymentID_NSString_orNil = [NSString stringWithUTF8String:payment_id_hexString.c_str()];
 	}
-	//
-	fn(nil, pub_viewKey_NSString, pub_spendKey_NSString, paymentID_NSString_orNil);
+	{
+		retVals.pub_viewKey_NSString = pub_viewKey_NSString;
+		retVals.pub_spendKey_NSString = pub_spendKey_NSString;
+		retVals.paymentID_NSString_orNil = paymentID_NSString_orNil;
+	}
+	return retVals;
 }
 
 - (NSString *)new_long_plain_paymentID
