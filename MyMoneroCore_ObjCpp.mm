@@ -353,10 +353,16 @@ using namespace epee;
 		false // isTestnet
 	).c_str()];
 }
-
-
-
-
+//
+- (NSUInteger)fixedRingsize
+{
+	return monero_transfer_utils::fixed_ringsize();
+}
+- (NSUInteger)fixedMixinsize
+{
+	return monero_transfer_utils::fixed_mixinsize();
+}
+//
 - (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID
 {
 	std::string payment_id__string = std::string(short_paymentID.UTF8String);
@@ -446,8 +452,6 @@ using namespace epee;
 	
 	}
 	//
-	const size_t fake_outs_count = 9; // TODO: declare this in function within monero_transfer_utils
-	//
 	monero_transfer_utils::CreateTx_Args args =
 	{
 		sec_viewKey_string,
@@ -457,7 +461,6 @@ using namespace epee;
 		transfers,
 		//
 		blockchain_size,
-		fake_outs_count,
 		0, // unlock_time
 		priority,
 		1, // default_priority

@@ -106,7 +106,10 @@
 - (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID;
 //
 - (NSString *)new_fakeAddressForRCTTx;
-
+//
+- (NSUInteger)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
+- (NSUInteger)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
+//
 - (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
 						   sec_spendKey:(NSString *)sec_spendKey
 					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
