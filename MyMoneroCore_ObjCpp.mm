@@ -452,6 +452,22 @@ using namespace epee;
 	
 	}
 	//
+	
+	std::function<bool(
+		std::vector<std::vector<monero_transfer_utils::get_outs_entry>> &,
+		const std::list<size_t> &,
+		size_t
+	)> get_random_outs_fn = [
+	
+	] (std::vector<
+	   std::vector<monero_transfer_utils::get_outs_entry>> &outs,
+	   const std::list<size_t> &selected_transfers,
+	   size_t fake_outputs_count
+	) -> bool {
+		// TODO:
+		return false;
+	};
+	//
 	monero_transfer_utils::CreateTx_Args args =
 	{
 		sec_viewKey_string,
@@ -459,6 +475,7 @@ using namespace epee;
 		//
 		dsts,
 		transfers,
+		get_random_outs_fn,
 		//
 		blockchain_size,
 		0, // unlock_time
@@ -473,7 +490,7 @@ using namespace epee;
 		//
 		false // is_testnet
 	};
-	monero_transfer_utils::CreateTx_RetVals retVals;
+	monero_transfer_utils::CreateTx_RetVals retVals = {};
 	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);
 	if (retVals.didError) {
 		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
