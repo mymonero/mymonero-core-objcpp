@@ -34,11 +34,10 @@
 //
 #import "MyMoneroCore_ObjCpp.h"
 #include "monero_wallet_utils.hpp"
-#include "monero_address_utils.hpp"
 #include "monero_paymentID_utils.hpp"
 #include "monero_transfer_utils.hpp"
 //
-#include "include_base_utils.h"
+#include "string_tools.h"
 using namespace epee;
 //
 @implementation MyMoneroCore_ObjCpp
@@ -301,27 +300,26 @@ using namespace epee;
 	);
 }
 //
-- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString
+- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet
 {
 	Monero_DecodedAddress_RetVals *retVals = [Monero_DecodedAddress_RetVals new];
 	//
-	boost::optional<monero_address_utils::DecodedAddress> optl__decoded_address = monero_address_utils::decoded_address(
-		std::string(addressString.UTF8String)
-	);
-	if (!optl__decoded_address) {
+	cryptonote::address_parse_info info;
+	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet, std::string(addressString.UTF8String));
+	if (didSucceed == false) {
 		retVals.errStr_orNil = NSLocalizedString(@"Invalid address", nil);
+		//
 		return retVals;
 	}
-	monero_address_utils::DecodedAddress decoded_address = *optl__decoded_address;
-	cryptonote::account_public_address address = decoded_address.address_components;
+	cryptonote::account_public_address address = info.address;
 	std::string pub_viewKey_hexString = string_tools::pod_to_hex(address.m_view_public_key);
 	std::string pub_spendKey_hexString = string_tools::pod_to_hex(address.m_spend_public_key);
 	//
 	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:pub_viewKey_hexString.c_str()];
 	NSString *pub_spendKey_NSString = [NSString stringWithUTF8String:pub_spendKey_hexString.c_str()];
 	NSString *paymentID_NSString_orNil = nil;
-	if (decoded_address.optl__payment_id) {
-		crypto::hash8 payment_id = *decoded_address.optl__payment_id;
+	if (info.has_payment_id == true) {
+		crypto::hash8 payment_id = info.payment_id;
 		std::string payment_id_hexString = string_tools::pod_to_hex(payment_id);
 		paymentID_NSString_orNil = [NSString stringWithUTF8String:payment_id_hexString.c_str()];
 	}
@@ -329,6 +327,7 @@ using namespace epee;
 		retVals.pub_viewKey_NSString = pub_viewKey_NSString;
 		retVals.pub_spendKey_NSString = pub_spendKey_NSString;
 		retVals.paymentID_NSString_orNil = paymentID_NSString_orNil;
+		retVals.isSubaddress = info.is_subaddress;
 	}
 	return retVals;
 }
@@ -349,7 +348,7 @@ using namespace epee;
 
 - (NSString *)new_fakeAddressForRCTTx
 {
-	return [NSString stringWithUTF8String:monero_address_utils::new_dummy_address_string_for_rct_tx(
+	return [NSString stringWithUTF8String:monero_transfer_utils::new_dummy_address_string_for_rct_tx(
 		false // isTestnet
 	).c_str()];
 }
@@ -363,7 +362,7 @@ using namespace epee;
 	return monero_transfer_utils::fixed_mixinsize();
 }
 //
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet
 {
 	std::string payment_id__string = std::string(short_paymentID.UTF8String);
 	crypto::hash8 payment_id_short;
@@ -371,24 +370,30 @@ using namespace epee;
 	if (!didParse) {
 		return nil;
 	}
-	boost::optional<monero_address_utils::DecodedAddress> optl__decoded_address = monero_address_utils::decoded_address(
-		std::string(std_address_NSString.UTF8String)
-	);
-	if (!optl__decoded_address) {
+	cryptonote::address_parse_info info;
+	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet, std::string(std_address_NSString.UTF8String));
+	if (didSucceed == false) {
 		return nil;
 	}
-	cryptonote::account_public_address address_components = (*optl__decoded_address).address_components;
-	//
-	// NOTE: For this function, I am opting to just implement here, instead of in monero_address_utils
-	bool is_testnet = false;
+	if (info.has_payment_id != false) {
+		// could even throw / fatalError here
+		return nil; // that was not a std_address!
+	}
 	std::string int_address_string = cryptonote::get_account_integrated_address_as_str(
-		is_testnet,
-		address_components,
+		isTestnet,
+		info.address,
 		payment_id_short
 	);
 	NSString *int_address_NSString = [NSString stringWithUTF8String:int_address_string.c_str()];
 	//
 	return int_address_NSString;
+}
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID // mainnet
+{
+	return [self
+		new_integratedAddrFromStdAddr:std_address_NSString
+		andShortPID:short_paymentID
+		isTestnet:NO];
 }
 
 
@@ -402,114 +407,114 @@ using namespace epee;
 
 
 // WIP:
-- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
-						   sec_spendKey:(NSString *)sec_spendKey
-					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
-							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
-							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
-					fake_outputs_count:(NSUInteger)fake_outputs_count
-			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
-							payment_id:(NSString *)optl__payment_id_NSString
-		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
-									fn:(void(^)(
-												NSString *errStr_orNil,
-												//
-												NSArray<NSString *> *rct_signatures,
-												NSString *extra
-												)
-										)fn
-{
-	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
-	{
-		fn(
-		   errStr,
-		   //
-		   nil,
-		   nil
-		);
-	};
-	//
-	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
-	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
-	//
-	uint32_t priority = 1; // TODO
-	uint64_t blockchain_size = 0; // TODO
-	//
-	const std::string *paymentID_string__ptr = nullptr;
-	std::string paymentID_string;
-	if (optl__payment_id_NSString) {
-		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
-		paymentID_string__ptr = &paymentID_string;
-	}
-	//
-	// TODO:
-	std::vector<monero_transfer_utils::transfer_details> transfers;
-	{
-		
-	}
-	std::vector<cryptonote::tx_destination_entry> dsts;
-	{
-	
-	}
-	//
-	
-	std::function<bool(
-		std::vector<std::vector<monero_transfer_utils::get_outs_entry>> &,
-		const std::list<size_t> &,
-		size_t
-	)> get_random_outs_fn = [
-	
-	] (std::vector<
-	   std::vector<monero_transfer_utils::get_outs_entry>> &outs,
-	   const std::list<size_t> &selected_transfers,
-	   size_t fake_outputs_count
-	) -> bool {
-		// TODO:
-		return false;
-	};
-	//
-	monero_transfer_utils::CreateTx_Args args =
-	{
-		sec_viewKey_string,
-		sec_spendKey_string,
-		//
-		dsts,
-		transfers,
-		get_random_outs_fn,
-		//
-		blockchain_size,
-		0, // unlock_time
-		priority,
-		1, // default_priority
-		//
-		0, // min_output_count
-		0, // min_output_value
-		false, // merge_destinations - apparent default from wallet2
-		//
-		paymentID_string__ptr,
-		//
-		false // is_testnet
-	};
-	monero_transfer_utils::CreateTx_RetVals retVals = {};
-	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);
-	if (retVals.didError) {
-		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
-		_doFn_withErrStr(errStr);
-		return;
-	}
-	NSCAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
-	//
-//	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:retVals.pub_viewKey_string.c_str()];
-	//
-	NSMutableArray<NSString *> *rct_signatures = [NSMutableArray new];
-	NSString *extra = nil; // TODO
-	//
-	fn(
-	   nil,
-	   //
-	   rct_signatures,
-	   extra
-   );
-}
+//- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
+//						   sec_spendKey:(NSString *)sec_spendKey
+//					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
+//							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
+//							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
+//					fake_outputs_count:(NSUInteger)fake_outputs_count
+//			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
+//							payment_id:(NSString *)optl__payment_id_NSString
+//		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
+//									fn:(void(^)(
+//												NSString *errStr_orNil,
+//												//
+//												NSArray<NSString *> *rct_signatures,
+//												NSString *extra
+//												)
+//										)fn
+//{
+//	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
+//	{
+//		fn(
+//		   errStr,
+//		   //
+//		   nil,
+//		   nil
+//		);
+//	};
+//	//
+//	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
+//	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
+//	//
+//	uint32_t priority = 1; // TODO
+//	uint64_t blockchain_size = 0; // TODO
+//	//
+//	const std::string *paymentID_string__ptr = nullptr;
+//	std::string paymentID_string;
+//	if (optl__payment_id_NSString) {
+//		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
+//		paymentID_string__ptr = &paymentID_string;
+//	}
+//	//
+//	// TODO:
+//	std::vector<monero_transfer_utils::transfer_details> transfers;
+//	{
+//		
+//	}
+//	std::vector<cryptonote::tx_destination_entry> dsts;
+//	{
+//	
+//	}
+//	//
+//	
+//	std::function<bool(
+//		std::vector<std::vector<monero_transfer_utils::get_outs_entry>> &,
+//		const std::list<size_t> &,
+//		size_t
+//	)> get_random_outs_fn = [
+//	
+//	] (std::vector<
+//	   std::vector<monero_transfer_utils::get_outs_entry>> &outs,
+//	   const std::list<size_t> &selected_transfers,
+//	   size_t fake_outputs_count
+//	) -> bool {
+//		// TODO:
+//		return false;
+//	};
+//	//
+//	monero_transfer_utils::CreateTx_Args args =
+//	{
+//		sec_viewKey_string,
+//		sec_spendKey_string,
+//		//
+//		dsts,
+//		transfers,
+//		get_random_outs_fn,
+//		//
+//		blockchain_size,
+//		0, // unlock_time
+//		priority,
+//		1, // default_priority
+//		//
+//		0, // min_output_count
+//		0, // min_output_value
+//		false, // merge_destinations - apparent default from wallet2
+//		//
+//		paymentID_string__ptr,
+//		//
+//		false // is_testnet
+//	};
+//	monero_transfer_utils::CreateTx_RetVals retVals = {};
+//	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);
+//	if (retVals.didError) {
+//		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
+//		_doFn_withErrStr(errStr);
+//		return;
+//	}
+//	NSCAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
+//	//
+////	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:retVals.pub_viewKey_string.c_str()];
+//	//
+//	NSMutableArray<NSString *> *rct_signatures = [NSMutableArray new];
+//	NSString *extra = nil; // TODO
+//	//
+//	fn(
+//	   nil,
+//	   //
+//	   rct_signatures,
+//	   extra
+//   );
+//}
 
 @end

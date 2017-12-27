@@ -46,6 +46,7 @@
 
 @property (nonatomic, strong) NSString *pub_viewKey_NSString;
 @property (nonatomic, strong) NSString *pub_spendKey_NSString;
+@property (nonatomic) BOOL isSubaddress;
 @property (nonatomic, strong) NSString *paymentID_NSString_orNil;
 
 @end

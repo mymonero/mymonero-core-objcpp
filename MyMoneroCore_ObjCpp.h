@@ -98,34 +98,35 @@
 															   )
 															  )fn;
 //
-- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString;
+- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet;
 //
 - (NSString *)new_long_plain_paymentID;
 - (NSString *)new_short_plain_paymentID;
 //
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID;
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet;
+- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID; // mainnet
 //
 - (NSString *)new_fakeAddressForRCTTx;
 //
 - (NSUInteger)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
 - (NSUInteger)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
 //
-- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
-						   sec_spendKey:(NSString *)sec_spendKey
-					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
-							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
-							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
-					fake_outputs_count:(NSUInteger)fake_outputs_count
-			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
-							payment_id:(NSString *)optl__payment_id_NSString
-		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
-									fn:(void(^)(
-												NSString *errStr_orNil,
-												//
-												NSArray<NSString *> *rct_signatures,
-												NSString *extra
-												)
-										)fn;
+//- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
+//						   sec_spendKey:(NSString *)sec_spendKey
+//					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
+//							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
+//							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
+//					fake_outputs_count:(NSUInteger)fake_outputs_count
+//			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
+//							payment_id:(NSString *)optl__payment_id_NSString
+//		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
+//									fn:(void(^)(
+//												NSString *errStr_orNil,
+//												//
+//												NSArray<NSString *> *rct_signatures,
+//												NSString *extra
+//												)
+//										)fn;
 
 
 @end
