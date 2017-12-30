@@ -83,7 +83,6 @@ using namespace epee;
 	}
 	monero_wallet_utils::WalletDescription walletDescription = *optl_walletDescription;
 	//
-	std::string sec_seed_hexString = string_tools::pod_to_hex(walletDescription.sec_seed);
 	std::string mnemonic_string = walletDescription.mnemonic_string;
 	std::string address_string = walletDescription.address_string;
 	std::string sec_viewKey_hexString = string_tools::pod_to_hex(walletDescription.sec_viewKey);
@@ -91,7 +90,7 @@ using namespace epee;
 	std::string pub_viewKey_hexString = string_tools::pod_to_hex(walletDescription.pub_viewKey);
 	std::string pub_spendKey_hexString = string_tools::pod_to_hex(walletDescription.pub_spendKey);
 	//
-	NSString *seed_NSString = [NSString stringWithUTF8String:sec_seed_hexString.c_str()];
+	NSString *seed_NSString = [NSString stringWithUTF8String:walletDescription.sec_seed_string.c_str()];
 	NSString *mnemonic_NSString = [NSString stringWithUTF8String:mnemonic_string.c_str()];
 	NSString *address_NSString = [NSString stringWithUTF8String:address_string.c_str()];
 	NSString *sec_viewKey_NSString = [NSString stringWithUTF8String:sec_viewKey_hexString.c_str()];
@@ -114,32 +113,48 @@ using namespace epee;
 	);
 }
 //
+//
 - (void)mnemonicStringFromSeedHex:(NSString *)seed_NSString
-		   mnemonicWordsetName:(NSString *)wordsetName
-							fn:(void (^)
-								(
-								 NSString *errStr_orNil,
-								 // OR
-								 NSString *mnemonic_NSString
-								 )
-								)fn
+			  mnemonicWordsetName:(NSString *)wordsetName
+							   fn:(void (^)
+								   (
+									NSString *errStr_orNil,
+									// OR
+									NSString *mnemonic_NSString
+									)
+								   )fn
 {
+	std::string sec_hexString = std::string(seed_NSString.UTF8String);
+	std::string mnemonic_string;
 	std::string mnemonic_language = std::string(wordsetName.UTF8String);
-	crypto::secret_key sec_seed;
-	{
-		std::string sec_hexString = std::string(seed_NSString.UTF8String);
-		string_tools::hex_to_pod(sec_hexString, sec_seed);
-	}
-	// TODO: any way to assert sec_seed initialized here..? necessary?
-	boost::optional<std::string> optl__mnemonic_string = monero_wallet_utils::mnemonic_string_from(
-		sec_seed,
-		mnemonic_language
-	);
-	if (!optl__mnemonic_string) {
-		fn(NSLocalizedString(@"Unable to obtain mnemonic from seed", nil), nil);
+	NSUInteger sec_hexString_length = seed_NSString.length;
+	//
+	bool r = false;
+	if (sec_hexString_length == crypto::sec_seed_hex_string_length) { // normal seed
+		crypto::secret_key sec_seed;
+		r = string_tools::hex_to_pod(sec_hexString, sec_seed);
+		if (!r) {
+			fn(NSLocalizedString(@"Invalid seed", ""), nil);
+			return;
+		}
+		r = crypto::ElectrumWords::bytes_to_words(sec_seed, mnemonic_string, mnemonic_language);
+	} else if (sec_hexString_length == crypto::legacy16B__sec_seed_hex_string_length) {
+		crypto::legacy16B_secret_key legacy16B_sec_seed;
+		r = string_tools::hex_to_pod(sec_hexString, legacy16B_sec_seed);
+		if (!r) {
+			fn(NSLocalizedString(@"Invalid seed", ""), nil);
+			return;
+		}
+		r = crypto::ElectrumWords::bytes_to_words(legacy16B_sec_seed, mnemonic_string, mnemonic_language); // called with the legacy16B version
+	} else {
+		fn(NSLocalizedString(@"Invalid seed length", ""), nil);
 		return;
 	}
-	NSString *mnemonic_NSString = [NSString stringWithUTF8String:(*optl__mnemonic_string).c_str()];
+	if (!r) {
+		fn(NSLocalizedString(@"Couldn't get mnemonic from hex seed", nil), nil);
+		return;
+	}
+	NSString *mnemonic_NSString = [NSString stringWithUTF8String:mnemonic_string.c_str()];
 	fn(nil, mnemonic_NSString);
 }
 //
@@ -186,7 +201,6 @@ using namespace epee;
 	}
 	monero_wallet_utils::WalletDescription walletDescription = *optl_walletDescription;
 	//
-	std::string sec_seed_hexString = string_tools::pod_to_hex(walletDescription.sec_seed);
 //	std::string mnemonic_string = walletDescription.mnemonic_string;
 	std::string address_string = walletDescription.address_string;
 	std::string sec_viewKey_hexString = string_tools::pod_to_hex(walletDescription.sec_viewKey);
@@ -194,7 +208,7 @@ using namespace epee;
 	std::string pub_viewKey_hexString = string_tools::pod_to_hex(walletDescription.pub_viewKey);
 	std::string pub_spendKey_hexString = string_tools::pod_to_hex(walletDescription.pub_spendKey);
 	//
-	NSString *seed_NSString = [NSString stringWithUTF8String:sec_seed_hexString.c_str()];
+	NSString *seed_NSString = [NSString stringWithUTF8String:walletDescription.sec_seed_string.c_str()];
 	// TODO? we could assert that the returned mnemonic is the same as the input one
 //	NSString *mnemonic_NSString = [NSString stringWithUTF8String:mnemonic_string.c_str()];
 	NSString *address_NSString = [NSString stringWithUTF8String:address_string.c_str()];
