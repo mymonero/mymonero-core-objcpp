@@ -82,17 +82,7 @@ using namespace epee;
 	bool did_error = retVals.did_error;
 	if (!r) {
 		NSAssert(did_error, @"Illegal: fail flag but !did_error");
-		fn(
-		   [NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()],
-		   //
-		   nil,
-		   nil,
-		   nil,
-		   nil,
-		   nil,
-		   nil,
-		   nil
-		);
+		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()]);
 		return NO;
 	}
 	NSAssert(!did_error, @"Illegal: success flag but did_error");
