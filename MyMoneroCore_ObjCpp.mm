@@ -42,7 +42,7 @@ using namespace epee;
 //
 @implementation MyMoneroCore_ObjCpp
 //
-- (void)newlyCreatedWallet:(NSString *)wordsetName
+- (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
 							 NSString *errStr_orNil,
@@ -73,16 +73,31 @@ using namespace epee;
 		   );
 	};
 	std::string mnemonic_language = std::string(wordsetName.UTF8String);
-	boost::optional<monero_wallet_utils::WalletDescription> optl_walletDescription = monero_wallet_utils::new_wallet(
+	monero_wallet_utils::WalletDescriptionRetVals retVals;
+	bool r = monero_wallet_utils::new_wallet(
 		mnemonic_language,
+		retVals,
 		false // isTestnet
 	);
-	if (!optl_walletDescription) {
-		_doFn_withErrStr(NSLocalizedString(@"Unknown error", nil));
-		return;
+	bool did_error = retVals.did_error;
+	if (!r) {
+		NSAssert(did_error, @"Illegal: fail flag but !did_error");
+		fn(
+		   [NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()],
+		   //
+		   nil,
+		   nil,
+		   nil,
+		   nil,
+		   nil,
+		   nil,
+		   nil
+		);
+		return NO;
 	}
-	monero_wallet_utils::WalletDescription walletDescription = *optl_walletDescription;
+	NSAssert(!did_error, @"Illegal: success flag but did_error");
 	//
+	monero_wallet_utils::WalletDescription walletDescription = *(retVals.optl__desc);
 	std::string mnemonic_string = walletDescription.mnemonic_string;
 	std::string address_string = walletDescription.address_string;
 	std::string sec_viewKey_hexString = string_tools::pod_to_hex(walletDescription.sec_viewKey);
@@ -98,8 +113,6 @@ using namespace epee;
 	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:pub_viewKey_hexString.c_str()];
 	NSString *pub_spendKey_NSString = [NSString stringWithUTF8String:pub_spendKey_hexString.c_str()];
 	//
-	// TODO: handle and pass through returned error … such as upon illegal mnemonic_language
-	//
 	fn(
 	   nil,
 	   //
@@ -111,6 +124,7 @@ using namespace epee;
 	   pub_viewKey_NSString,
 	   pub_spendKey_NSString
 	);
+	return YES;
 }
 //
 //
@@ -158,7 +172,7 @@ using namespace epee;
 	fn(nil, mnemonic_NSString);
 }
 //
-- (void)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
+- (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
 				  	wordsetName:(NSString *)wordsetName
 							 fn:(void (^)
 								 (
@@ -191,15 +205,21 @@ using namespace epee;
 	};
 	std::string mnemonic_string = std::string(mnemonic_NSString.UTF8String);
 	std::string mnemonic_language = std::string(wordsetName.UTF8String);
-	boost::optional<monero_wallet_utils::WalletDescription> optl_walletDescription = monero_wallet_utils::wallet_with(
+	monero_wallet_utils::WalletDescriptionRetVals retVals;
+	BOOL r = monero_wallet_utils::wallet_with(
 		mnemonic_string,
-		mnemonic_language
+		mnemonic_language,
+		retVals
 	);
-	if (!optl_walletDescription) {
-		_doFn_withErrStr(NSLocalizedString(@"Unknown error", nil));
-		return;
+	bool did_error = retVals.did_error;
+	if (!r) {
+		NSAssert(did_error, @"Illegal: fail flag but !did_error");
+		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()]);
+		return NO;
 	}
-	monero_wallet_utils::WalletDescription walletDescription = *optl_walletDescription;
+	NSAssert(!did_error, @"Illegal: success flag but did_error");
+	//
+	monero_wallet_utils::WalletDescription walletDescription = *(retVals.optl__desc);
 	//
 //	std::string mnemonic_string = walletDescription.mnemonic_string;
 	std::string address_string = walletDescription.address_string;
@@ -230,6 +250,7 @@ using namespace epee;
 	   pub_viewKey_NSString,
 	   pub_spendKey_NSString
 	);
+	return YES;
 }
 //
 - (void)verifiedComponentsForOpeningExistingWalletWithAddress:(NSString *)address_NSString
@@ -294,8 +315,8 @@ using namespace epee;
 		_doFn_withErrStr(errStr);
 		return;
 	}
-	NSCAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
-	NSCAssert(outputs.isValid, @"Found unexpectedly invalid wallet components without an error");
+	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
+	NSAssert(outputs.isValid, @"Found unexpectedly invalid wallet components without an error");
 	//
 	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:outputs.pub_viewKey_string.c_str()];
 	NSString *pub_spendKey_NSString = [NSString stringWithUTF8String:outputs.pub_spendKey_string.c_str()];
@@ -516,7 +537,7 @@ using namespace epee;
 //		_doFn_withErrStr(errStr);
 //		return;
 //	}
-//	NSCAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
+//	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
 //	//
 ////	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:retVals.pub_viewKey_string.c_str()];
 //	//

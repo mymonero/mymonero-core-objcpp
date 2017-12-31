@@ -37,7 +37,7 @@
 //
 @interface MyMoneroCore_ObjCpp : NSObject
 
-- (void)newlyCreatedWallet:(NSString *)wordsetName
+- (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
 							 NSString *errStr_orNil,
@@ -62,7 +62,7 @@
 									)
 								   )fn;
 
-- (void)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
+- (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
 					wordsetName:(NSString *)wordsetName
 							 fn:(void (^)
 								 (
