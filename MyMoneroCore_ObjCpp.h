@@ -3,7 +3,7 @@
 //  MyMonero
 //
 //  Created by Paul Shapiro on 11/22/17.
-//  Copyright (c) 2014-2017, MyMonero.com
+//  Copyright (c) 2014-2018, MyMonero.com
 //
 //  All rights reserved.
 //
@@ -110,6 +110,12 @@
 //
 - (NSUInteger)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
 - (NSUInteger)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
+//
+- (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
+sec_spendKey:(NSString *)sec_spendKey_NSString
+sec_viewKey:(NSString *)sec_viewKey_NSString
+pub_spendKey:(NSString *)pub_spendKey_NSString
+out_index:(uint64_t)out_index;
 //
 //- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
 //						   sec_spendKey:(NSString *)sec_spendKey

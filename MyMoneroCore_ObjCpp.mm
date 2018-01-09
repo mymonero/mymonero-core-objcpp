@@ -3,7 +3,7 @@
 //  MyMonero
 //
 //  Created by Paul Shapiro on 11/22/17.
-//  Copyright (c) 2014-2017, MyMonero.com
+//  Copyright (c) 2014-2018, MyMonero.com
 //
 //  All rights reserved.
 //
@@ -36,6 +36,7 @@
 #include "monero_wallet_utils.hpp"
 #include "monero_paymentID_utils.hpp"
 #include "monero_transfer_utils.hpp"
+#include "monero_key_image_utils.hpp"
 //
 #include "string_tools.h"
 using namespace epee;
@@ -420,17 +421,41 @@ using namespace epee;
 		andShortPID:short_paymentID
 		isTestnet:NO];
 }
-
-
-
-
-
-
-
-
-
-
-
+//
+- (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
+							 sec_spendKey:(NSString *)sec_spendKey_NSString
+							  sec_viewKey:(NSString *)sec_viewKey_NSString
+							 pub_spendKey:(NSString *)pub_spendKey_NSString
+								out_index:(uint64_t)out_index
+{
+	crypto::secret_key sec_viewKey{};
+	crypto::secret_key sec_spendKey{};
+	crypto::public_key pub_spendKey{};
+	crypto::public_key tx_pub_key{};
+	{ // Would be nice to find a way to avoid converting these back and forth
+		bool r = false;
+		r = string_tools::hex_to_pod(std::string(sec_viewKey_NSString.UTF8String), sec_viewKey);
+		NSAssert(r, @"Invalid secret view key");
+		r = string_tools::hex_to_pod(std::string(sec_spendKey_NSString.UTF8String), sec_spendKey);
+		NSAssert(r, @"Invalid secret spend key");
+		r = string_tools::hex_to_pod(std::string(pub_spendKey_NSString.UTF8String), pub_spendKey);
+		NSAssert(r, @"Invalid public spend key");
+		r = string_tools::hex_to_pod(std::string(tx_pub_key_NSString.UTF8String), tx_pub_key);
+		NSAssert(r, @"Invalid tx pub key");
+	}
+	monero_key_image_utils::KeyImageRetVals retVals;
+	{
+		bool r = monero_key_image_utils::new__key_image(pub_spendKey, sec_spendKey, sec_viewKey, tx_pub_key, out_index, retVals);
+		if (!r) {
+			return nil; // TODO: return error string?
+		}
+	}
+	std::string key_image_hex_string = string_tools::pod_to_hex(retVals.calculated_key_image);
+	NSString *key_image_hex_NSString = [NSString stringWithUTF8String:key_image_hex_string.c_str()];
+	//
+	return key_image_hex_NSString;
+}
+//
 // WIP:
 //- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
 //						   sec_spendKey:(NSString *)sec_spendKey
