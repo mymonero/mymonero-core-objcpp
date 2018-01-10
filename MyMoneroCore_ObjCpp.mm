@@ -456,115 +456,163 @@ using namespace epee;
 	return key_image_hex_NSString;
 }
 //
-// WIP:
-//- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
-//						   sec_spendKey:(NSString *)sec_spendKey
-//					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
-//							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
-//							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
-//					fake_outputs_count:(NSUInteger)fake_outputs_count
-//			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
-//							payment_id:(NSString *)optl__payment_id_NSString
-//		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
-//									fn:(void(^)(
-//												NSString *errStr_orNil,
-//												//
-//												NSArray<NSString *> *rct_signatures,
-//												NSString *extra
-//												)
-//										)fn
-//{
-//	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
+- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
+						   sec_spendKey:(NSString *)sec_spendKey
+					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
+							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
+							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
+					fake_outputs_count:(NSUInteger)fake_outputs_count
+			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
+							payment_id:(NSString *)optl__payment_id_NSString
+		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
+									fn:(void(^)(
+												NSString *errStr_orNil,
+												//
+												NSArray<NSString *> *rct_signatures,
+												NSString *extra
+												)
+										)fn
+{
+	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
+	{
+		fn(
+		   errStr,
+		   //
+		   nil,
+		   nil
+		);
+	};
+	//
+	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
+	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
+	//
+	uint32_t priority = 1; // TODO
+	uint64_t blockchain_size = 0; // TODO
+	//
+	const std::string *paymentID_string__ptr = nullptr;
+	std::string paymentID_string;
+	if (optl__payment_id_NSString) {
+		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
+		paymentID_string__ptr = &paymentID_string;
+	}
+	//
+	// TODO:
+	std::vector<monero_transfer_utils::transfer_details> transfers;
+	{
+		
+	}
+	//
+	std::vector<cryptonote::tx_destination_entry> dsts;
+	// TODO
+//	for (size_t i = 0; i < local_args.size(); i += 2)
 //	{
-//		fn(
-//		   errStr,
-//		   //
-//		   nil,
-//		   nil
-//		);
-//	};
-//	//
-//	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
-//	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
-//	//
-//	uint32_t priority = 1; // TODO
-//	uint64_t blockchain_size = 0; // TODO
-//	//
-//	const std::string *paymentID_string__ptr = nullptr;
-//	std::string paymentID_string;
-//	if (optl__payment_id_NSString) {
-//		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
-//		paymentID_string__ptr = &paymentID_string;
+//		cryptonote::address_parse_info info;
+//		cryptonote::tx_destination_entry de;
+//		if (!cryptonote::get_account_address_from_str_or_url(info, m_wallet->testnet(), local_args[i], oa_prompter))
+//		{
+//			fail_msg_writer() << tr("failed to parse address");
+//			return true;
+//		}
+//		de.addr = info.address;
+//		de.is_subaddress = info.is_subaddress;
+//
+//		if (info.has_payment_id)
+//		{
+//			if (payment_id_seen)
+//			{
+//				fail_msg_writer() << tr("a single transaction cannot use more than one payment id: ") << local_args[i];
+//				return true;
+//			}
+//
+//			std::string extra_nonce;
+//			set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, info.payment_id);
+//			bool r = add_extra_nonce_to_tx_extra(extra, extra_nonce);
+//			if(!r)
+//			{
+//				fail_msg_writer() << tr("failed to set up payment id, though it was decoded correctly");
+//				return true;
+//			}
+//			payment_id_seen = true;
+//		}
+//
+//		bool ok = cryptonote::parse_amount(de.amount, local_args[i + 1]);
+//		if(!ok || 0 == de.amount)
+//		{
+//			fail_msg_writer() << tr("amount is wrong: ") << local_args[i] << ' ' << local_args[i + 1] <<
+//			", " << tr("expected number from 0 to ") << print_money(std::numeric_limits<uint64_t>::max());
+//			return true;
+//		}
+//
+//		dsts.push_back(de);
 //	}
-//	//
-//	// TODO:
-//	std::vector<monero_transfer_utils::transfer_details> transfers;
-//	{
-//		
-//	}
-//	std::vector<cryptonote::tx_destination_entry> dsts;
-//	{
-//	
-//	}
-//	//
-//	
-//	std::function<bool(
-//		std::vector<std::vector<monero_transfer_utils::get_outs_entry>> &,
-//		const std::list<size_t> &,
-//		size_t
-//	)> get_random_outs_fn = [
-//	
-//	] (std::vector<
-//	   std::vector<monero_transfer_utils::get_outs_entry>> &outs,
-//	   const std::list<size_t> &selected_transfers,
-//	   size_t fake_outputs_count
-//	) -> bool {
-//		// TODO:
-//		return false;
-//	};
-//	//
-//	monero_transfer_utils::CreateTx_Args args =
-//	{
-//		sec_viewKey_string,
-//		sec_spendKey_string,
-//		//
-//		dsts,
-//		transfers,
-//		get_random_outs_fn,
-//		//
-//		blockchain_size,
-//		0, // unlock_time
-//		priority,
-//		1, // default_priority
-//		//
-//		0, // min_output_count
-//		0, // min_output_value
-//		false, // merge_destinations - apparent default from wallet2
-//		//
-//		paymentID_string__ptr,
-//		//
-//		false // is_testnet
-//	};
-//	monero_transfer_utils::CreateTx_RetVals retVals = {};
-//	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);
-//	if (retVals.didError) {
-//		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
-//		_doFn_withErrStr(errStr);
-//		return;
-//	}
-//	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
-//	//
-////	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:retVals.pub_viewKey_string.c_str()];
-//	//
-//	NSMutableArray<NSString *> *rct_signatures = [NSMutableArray new];
-//	NSString *extra = nil; // TODO
-//	//
-//	fn(
-//	   nil,
-//	   //
-//	   rct_signatures,
-//	   extra
-//   );
-//}
+	
+	
+	
+	
+	
+	std::function<bool(
+		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
+		const std::list<size_t> &,
+		size_t
+	)> get_random_outs_fn = [
+	
+	] (std::vector<
+	   std::vector<tools::wallet2::get_outs_entry>> &outs,
+	   const std::list<size_t> &selected_transfers,
+	   size_t fake_outputs_count
+	) -> bool {
+		// TODO:
+		return false;
+	};
+	//
+	std::set<uint32_t> subaddr_indices; // TODO?
+	//
+	monero_transfer_utils::CreateTx_Args args =
+	{
+		sec_viewKey_string,
+		sec_spendKey_string,
+		//
+		dsts,
+		transfers,
+		get_random_outs_fn,
+		//
+		blockchain_size,
+		0, // unlock_time
+		priority,
+		1, // default_priority
+		//
+		0, // min_output_count
+		0, // min_output_value
+		false, // merge_destinations - apparent default from wallet2
+		//
+		paymentID_string__ptr,
+		//
+		0, // current_subaddress_account TODO??
+		subaddr_indices,
+		//
+		false, // is_testnet
+		true // is_trusted_daemon
+	};
+	monero_transfer_utils::CreateTx_RetVals retVals = {};
+	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);
+	if (retVals.didError) {
+		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
+		_doFn_withErrStr(errStr);
+		return;
+	}
+	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
+	//
+//	NSString *pub_viewKey_NSString = [NSString stringWithUTF8String:retVals.pub_viewKey_string.c_str()];
+	//
+	NSMutableArray<NSString *> *rct_signatures = [NSMutableArray new];
+	NSString *extra = nil; // TODO
+	//
+	fn(
+	   nil,
+	   //
+	   rct_signatures,
+	   extra
+   );
+}
 
 @end
