@@ -32,12 +32,6 @@
 //  THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-// TODO
-//@class MoneroOutputDescription;
-//@class MoneroRandomAmountAndOutputs;
-//@class MoneroRandomOutputDescription;
-//@class SendFundsTargetDescription;
-//@class MoneroKeyDuo;
 
 
 @interface Monero_DecodedAddress_RetVals: NSObject
@@ -50,3 +44,18 @@
 @property (nonatomic, strong) NSString *paymentID_NSString_orNil;
 
 @end
+
+
+@interface Monero_GetRandomOutsBlock_RetVals: NSObject
+
+@property (nonatomic, strong) NSString *errStr_orNil;
+
+//@class MoneroRandomAmountAndOutputs;
+//@class MoneroRandomOutputDescription;
+@property (nonatomic, strong) NSArray *mixOuts;
+
+@end
+
+
+// TODO
+//@class MoneroOutputDescription;

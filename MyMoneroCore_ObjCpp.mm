@@ -41,6 +41,8 @@
 #include "string_tools.h"
 using namespace epee;
 //
+#include "wallet2_transfer_utils.h"
+//
 @implementation MyMoneroCore_ObjCpp
 //
 - (BOOL)newlyCreatedWallet:(NSString *)wordsetName
@@ -456,22 +458,20 @@ using namespace epee;
 	return key_image_hex_NSString;
 }
 //
-- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
-						   sec_spendKey:(NSString *)sec_spendKey
-					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
-							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
-							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
-					fake_outputs_count:(NSUInteger)fake_outputs_count
-			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
-							payment_id:(NSString *)optl__payment_id_NSString
-		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
-									fn:(void(^)(
-												NSString *errStr_orNil,
-												//
-												NSArray<NSString *> *rct_signatures,
-												NSString *extra
-												)
-										)fn
+- (void)new_serializedSignedTransactionTo_address:(NSString *)to_address
+									   payment_id:(NSString *)optl__payment_id_NSString
+							  amount_bigIntString:(NSString *)amount_bigIntString
+									  sec_viewKey:(NSString *)sec_viewKey
+									 sec_spendKey:(NSString *)sec_spendKey
+									   unusedOuts:(NSArray *)unusedOuts // [Monero_OutputDescription_BridgeObj]
+							 getRandomOuts__block:(void(^ __nonnull )(void(^__nonnull)(Monero_GetRandomOutsBlock_RetVals * __nonnull cb)))getRandomOuts__block
+											   fn:(void(^ __nonnull )(
+														   NSString *errStr_orNil,
+														   //
+														   NSArray<NSString *> *rct_signatures,
+														   NSString *extra
+														   )
+												   )fn
 {
 	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
 	{
@@ -497,7 +497,7 @@ using namespace epee;
 	}
 	//
 	// TODO:
-	std::vector<monero_transfer_utils::transfer_details> transfers;
+	std::vector<tools::wallet2::transfer_details> transfers;
 	{
 		
 	}
@@ -591,7 +591,8 @@ using namespace epee;
 		subaddr_indices,
 		//
 		false, // is_testnet
-		true // is_trusted_daemon
+		true, // is_trusted_daemon
+		true // is_lightwallet
 	};
 	monero_transfer_utils::CreateTx_RetVals retVals = {};
 	BOOL didSucceed = monero_transfer_utils::create_signed_transaction(args, retVals);

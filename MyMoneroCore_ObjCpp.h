@@ -112,27 +112,24 @@
 - (NSUInteger)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
 //
 - (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
-sec_spendKey:(NSString *)sec_spendKey_NSString
-sec_viewKey:(NSString *)sec_viewKey_NSString
-pub_spendKey:(NSString *)pub_spendKey_NSString
-out_index:(uint64_t)out_index;
+				sec_spendKey:(NSString *)sec_spendKey_NSString
+				sec_viewKey:(NSString *)sec_viewKey_NSString
+				pub_spendKey:(NSString *)pub_spendKey_NSString
+				out_index:(uint64_t)out_index;
 //
-//- (void)new_transactionWith_sec_viewKey:(NSString *)sec_viewKey
-//						   sec_spendKey:(NSString *)sec_spendKey
-//					 splitDestinations:(NSArray *)splitDestinations //: [SendFundsTargetDescription] (LW generic screws with method sig for some reason)
-//							 usingOuts:(NSArray *)usingOuts //: [MoneroOutputDescription]
-//							   mixOuts:(NSArray *)mixOuts //: [MoneroRandomAmountAndOutputs]
-//					fake_outputs_count:(NSUInteger)fake_outputs_count
-//			   fee_amount_bigIntString:(NSString *)fee_amount_bigIntString
-//							payment_id:(NSString *)optl__payment_id_NSString
-//		  ifPIDEncrypt_realDestViewKey:(NSString *)ifPIDEncrypt_realDestViewKey_NSString
-//									fn:(void(^)(
-//												NSString *errStr_orNil,
-//												//
-//												NSArray<NSString *> *rct_signatures,
-//												NSString *extra
-//												)
-//										)fn;
-
+- (void)new_serializedSignedTransactionTo_address:(NSString *)to_address
+										payment_id:(NSString *)optl__payment_id_NSString
+								amount_bigIntString:(NSString *)amount_bigIntString
+										sec_viewKey:(NSString *)sec_viewKey
+										sec_spendKey:(NSString *)sec_spendKey
+										unusedOuts:(NSArray *)unusedOuts // [Monero_OutputDescription_BridgeObj]
+							getRandomOuts__block:(void(^ __nonnull )(void(^__nonnull)(Monero_GetRandomOutsBlock_RetVals * __nonnull cb)))getRandomOuts__block
+											fn:(void(^ __nonnull )(
+													NSString *errStr_orNil,
+													//
+													NSArray<NSString *> *rct_signatures,
+													NSString *extra
+													)
+												)fn;
 
 @end
