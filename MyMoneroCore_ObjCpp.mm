@@ -463,6 +463,8 @@ using namespace epee;
 							  amount_bigIntString:(NSString *)amount_bigIntString
 									  sec_viewKey:(NSString *)sec_viewKey
 									 sec_spendKey:(NSString *)sec_spendKey
+								   blockchain_size:(uint64_t)blockchain_size
+										 priority:(uint32_t)priority
 									   unusedOuts:(NSArray *)unusedOuts // [Monero_OutputDescription_BridgeObj]
 							 getRandomOuts__block:(void(^ __nonnull )(void(^__nonnull)(Monero_GetRandomOutsBlock_RetVals * __nonnull cb)))getRandomOuts__block
 											   fn:(void(^ __nonnull )(
@@ -486,8 +488,6 @@ using namespace epee;
 	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
 	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
 	//
-	uint32_t priority = 1; // TODO
-	uint64_t blockchain_size = 0; // TODO
 	//
 	const std::string *paymentID_string__ptr = nullptr;
 	std::string paymentID_string;
@@ -555,14 +555,28 @@ using namespace epee;
 		const std::list<size_t> &,
 		size_t
 	)> get_random_outs_fn = [
-	
+		getRandomOuts__block
 	] (std::vector<
 	   std::vector<tools::wallet2::get_outs_entry>> &outs,
 	   const std::list<size_t> &selected_transfers,
 	   size_t fake_outputs_count
 	) -> bool {
 		// TODO:
-		return false;
+		
+		// TODO pass fake_outputs_count etc as required to getRandomOuts
+		getRandomOuts__block(^(Monero_GetRandomOutsBlock_RetVals *retVals)
+		{
+			NSLog(@"retvals %@", retVals);
+			// TODO: now that we have retVals
+			if (retVals.errStr_orNil != nil) {
+				// TODO: return nil to create tx calling this random out and fail there … which should trigger fn to be called
+				return; // prevent fallthrough
+			}
+			// TODO: pass retVals mixOuts back after adding callback or way to return…
+			
+		});
+		//
+		return false; // TODO: need/want this flag?
 	};
 	//
 	std::set<uint32_t> subaddr_indices; // TODO?

@@ -122,6 +122,8 @@
 								amount_bigIntString:(NSString *)amount_bigIntString
 										sec_viewKey:(NSString *)sec_viewKey
 										sec_spendKey:(NSString *)sec_spendKey
+									blockchain_size:(uint64_t)blockchain_size
+										priority:(uint32_t)priority // this must be a number between but not including 0 and 5
 										unusedOuts:(NSArray *)unusedOuts // [Monero_OutputDescription_BridgeObj]
 							getRandomOuts__block:(void(^ __nonnull )(void(^__nonnull)(Monero_GetRandomOutsBlock_RetVals * __nonnull cb)))getRandomOuts__block
 											fn:(void(^ __nonnull )(
