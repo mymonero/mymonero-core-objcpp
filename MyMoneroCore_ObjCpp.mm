@@ -460,7 +460,7 @@ using namespace epee;
 //
 - (void)new_serializedSignedTransactionTo_address:(NSString *)to_address
 									   payment_id:(NSString *)optl__payment_id_NSString
-							  amount_bigIntString:(NSString *)amount_bigIntString
+							  amount_float_NSString:(NSString *)amount_float_NSString
 									  sec_viewKey:(NSString *)sec_viewKey
 									 sec_spendKey:(NSString *)sec_spendKey
 								   blockchain_size:(uint64_t)blockchain_size
@@ -485,9 +485,10 @@ using namespace epee;
 		);
 	};
 	//
+	std::string to_address_string = std::string(to_address.UTF8String);
+	std::string amount_float_string = std::string(amount_float_NSString.UTF8String);
 	std::string sec_viewKey_string = std::string(sec_viewKey.UTF8String);
 	std::string sec_spendKey_string = std::string(sec_spendKey.UTF8String);
-	//
 	//
 	const std::string *paymentID_string__ptr = nullptr;
 	std::string paymentID_string;
@@ -502,54 +503,6 @@ using namespace epee;
 		
 	}
 	//
-	std::vector<cryptonote::tx_destination_entry> dsts;
-	// TODO
-//	for (size_t i = 0; i < local_args.size(); i += 2)
-//	{
-//		cryptonote::address_parse_info info;
-//		cryptonote::tx_destination_entry de;
-//		if (!cryptonote::get_account_address_from_str_or_url(info, m_wallet->testnet(), local_args[i], oa_prompter))
-//		{
-//			fail_msg_writer() << tr("failed to parse address");
-//			return true;
-//		}
-//		de.addr = info.address;
-//		de.is_subaddress = info.is_subaddress;
-//
-//		if (info.has_payment_id)
-//		{
-//			if (payment_id_seen)
-//			{
-//				fail_msg_writer() << tr("a single transaction cannot use more than one payment id: ") << local_args[i];
-//				return true;
-//			}
-//
-//			std::string extra_nonce;
-//			set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, info.payment_id);
-//			bool r = add_extra_nonce_to_tx_extra(extra, extra_nonce);
-//			if(!r)
-//			{
-//				fail_msg_writer() << tr("failed to set up payment id, though it was decoded correctly");
-//				return true;
-//			}
-//			payment_id_seen = true;
-//		}
-//
-//		bool ok = cryptonote::parse_amount(de.amount, local_args[i + 1]);
-//		if(!ok || 0 == de.amount)
-//		{
-//			fail_msg_writer() << tr("amount is wrong: ") << local_args[i] << ' ' << local_args[i + 1] <<
-//			", " << tr("expected number from 0 to ") << print_money(std::numeric_limits<uint64_t>::max());
-//			return true;
-//		}
-//
-//		dsts.push_back(de);
-//	}
-	
-	
-	
-	
-	
 	std::function<bool(
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
 		const std::list<size_t> &,
@@ -586,7 +539,9 @@ using namespace epee;
 		sec_viewKey_string,
 		sec_spendKey_string,
 		//
-		dsts,
+		to_address_string,
+		amount_float_string,
+		//
 		transfers,
 		get_random_outs_fn,
 		//

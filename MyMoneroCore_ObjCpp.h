@@ -119,7 +119,7 @@
 //
 - (void)new_serializedSignedTransactionTo_address:(NSString *)to_address
 										payment_id:(NSString *)optl__payment_id_NSString
-								amount_bigIntString:(NSString *)amount_bigIntString
+							 amount_float_NSString:(NSString *)amount_float_NSString
 										sec_viewKey:(NSString *)sec_viewKey
 										sec_spendKey:(NSString *)sec_spendKey
 									blockchain_size:(uint64_t)blockchain_size
