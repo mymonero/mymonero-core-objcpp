@@ -497,7 +497,7 @@ using namespace epee;
 		paymentID_string__ptr = &paymentID_string;
 	}
 	//
-	// TODO:
+	// TODO: obtain this, and unconfirmed txs, by porting Jaquee's parsing code
 	std::vector<tools::wallet2::transfer_details> transfers;
 	{
 		
@@ -514,8 +514,7 @@ using namespace epee;
 	   const std::list<size_t> &selected_transfers,
 	   size_t fake_outputs_count
 	) -> bool {
-		// TODO:
-		
+		//
 		// TODO pass fake_outputs_count etc as required to getRandomOuts
 		getRandomOuts__block(^(Monero_GetRandomOutsBlock_RetVals *retVals)
 		{
@@ -525,8 +524,9 @@ using namespace epee;
 				// TODO: return nil to create tx calling this random out and fail there … which should trigger fn to be called
 				return; // prevent fallthrough
 			}
-			// TODO: pass retVals mixOuts back after adding callback or way to return…
-			
+			//
+			// ---TODO---: pass retVals mixOuts back after adding callback or some other way to return…
+			//
 		});
 		//
 		return false; // TODO: need/want this flag?
