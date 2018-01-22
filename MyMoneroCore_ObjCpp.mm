@@ -45,6 +45,17 @@ using namespace epee;
 //
 @implementation MyMoneroCore_ObjCpp
 //
+// Class
++ (NSString *)retValDictKey__ErrStr
+{
+	return @"ErrStr";
+}
++ (NSString *)retValDictKey__Value
+{
+	return @"Value";
+}
+//
+// Instance
 - (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
@@ -121,15 +132,8 @@ using namespace epee;
 }
 //
 //
-- (void)mnemonicStringFromSeedHex:(NSString *)seed_NSString
-			  mnemonicWordsetName:(NSString *)wordsetName
-							   fn:(void (^)
-								   (
-									NSString *errStr_orNil,
-									// OR
-									NSString *mnemonic_NSString
-									)
-								   )fn
+- (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
+						mnemonicWordsetName:(NSString *)wordsetName
 {
 	std::string sec_hexString = std::string(seed_NSString.UTF8String);
 	std::string mnemonic_string;
@@ -141,28 +145,34 @@ using namespace epee;
 		crypto::secret_key sec_seed;
 		r = string_tools::hex_to_pod(sec_hexString, sec_seed);
 		if (!r) {
-			fn(NSLocalizedString(@"Invalid seed", ""), nil);
-			return;
+			return @{
+				[[self class] retValDictKey__ErrStr]: NSLocalizedString(@"Invalid seed", comment:@"")
+			};
 		}
 		r = crypto::ElectrumWords::bytes_to_words(sec_seed, mnemonic_string, mnemonic_language);
 	} else if (sec_hexString_length == crypto::legacy16B__sec_seed_hex_string_length) {
 		crypto::legacy16B_secret_key legacy16B_sec_seed;
 		r = string_tools::hex_to_pod(sec_hexString, legacy16B_sec_seed);
 		if (!r) {
-			fn(NSLocalizedString(@"Invalid seed", ""), nil);
-			return;
+			return @{
+				[[self class] retValDictKey__ErrStr]: NSLocalizedString(@"Invalid seed", comment: @"")
+			};
 		}
 		r = crypto::ElectrumWords::bytes_to_words(legacy16B_sec_seed, mnemonic_string, mnemonic_language); // called with the legacy16B version
 	} else {
-		fn(NSLocalizedString(@"Invalid seed length", ""), nil);
-		return;
+		return @{
+			[[self class] retValDictKey__ErrStr]: NSLocalizedString(@"Invalid seed length", comment: @"")
+		};
 	}
 	if (!r) {
-		fn(NSLocalizedString(@"Couldn't get mnemonic from hex seed", nil), nil);
-		return;
+		return @{
+			[[self class] retValDictKey__ErrStr] : NSLocalizedString(@"Couldn't get mnemonic from hex seed", comment: @"")
+		};
 	}
-	NSString *mnemonic_NSString = [NSString stringWithUTF8String:mnemonic_string.c_str()];
-	fn(nil, mnemonic_NSString);
+	NSString *mnemonicString = [NSString stringWithUTF8String:mnemonic_string.c_str()];
+	return @{
+		[[self class] retValDictKey__Value]: mnemonicString
+	};
 }
 //
 - (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString

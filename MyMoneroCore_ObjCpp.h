@@ -35,8 +35,14 @@
 #import <Foundation/Foundation.h>
 #import "MoneroTypes.h"
 //
+//
 @interface MyMoneroCore_ObjCpp : NSObject
-
+//
+// Return value dictionary keys
++ (NSString *)retValDictKey__ErrStr;
++ (NSString *)retValDictKey__Value; // used for single value returns… you should force-cast the type… e.g. "as! String" for -mnemonicStringFromSeedHex:…
+//
+//
 - (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
@@ -52,15 +58,8 @@
 							 )
 							)fn;
 
-- (void)mnemonicStringFromSeedHex:(NSString *)seed_NSString
-			  mnemonicWordsetName:(NSString *)wordsetName
-							   fn:(void (^)
-								   (
-									NSString *errStr_orNil,
-									// OR
-									NSString *mnemonic_NSString
-									)
-								   )fn;
+- (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
+						mnemonicWordsetName:(NSString *)wordsetName;
 
 - (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
 					wordsetName:(NSString *)wordsetName
