@@ -43,6 +43,18 @@ using namespace epee;
 //
 #include "wallet2_transfer_utils.h"
 //
+//
+// Accessory types
+//
+@implementation Monero_DecodedAddress_RetVals
+@end
+//
+@implementation Monero_GetRandomOutsBlock_RetVals
+@end
+//
+//
+// Principal type
+//
 @implementation MyMoneroCore_ObjCpp
 //
 // Class
@@ -391,11 +403,11 @@ using namespace epee;
 	).c_str()];
 }
 //
-- (NSUInteger)fixedRingsize
+- (size_t)fixedRingsize
 {
 	return monero_transfer_utils::fixed_ringsize();
 }
-- (NSUInteger)fixedMixinsize
+- (size_t)fixedMixinsize
 {
 	return monero_transfer_utils::fixed_mixinsize();
 }

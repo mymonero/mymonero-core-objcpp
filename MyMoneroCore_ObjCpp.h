@@ -33,8 +33,28 @@
 //
 //
 #import <Foundation/Foundation.h>
-#import "MoneroTypes.h"
 //
+@interface Monero_DecodedAddress_RetVals: NSObject
+
+@property (nonatomic, copy) NSString *errStr_orNil;
+
+@property (nonatomic, copy) NSString *pub_viewKey_NSString;
+@property (nonatomic, copy) NSString *pub_spendKey_NSString;
+@property (nonatomic) BOOL isSubaddress;
+@property (nonatomic, copy) NSString *paymentID_NSString_orNil;
+
+@end
+
+
+@interface Monero_GetRandomOutsBlock_RetVals: NSObject
+
+@property (nonatomic, copy) NSString *errStr_orNil;
+
+//@class MoneroRandomAmountAndOutputs;
+//@class MoneroRandomOutputDescription;
+@property (nonatomic, strong) NSArray *mixOuts;
+
+@end
 //
 @interface MyMoneroCore_ObjCpp : NSObject
 //
@@ -107,8 +127,8 @@
 //
 - (NSString *)new_fakeAddressForRCTTx;
 //
-- (NSUInteger)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
-- (NSUInteger)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
+- (uint32_t)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
+- (uint32_t)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
 //
 - (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
 				sec_spendKey:(NSString *)sec_spendKey_NSString

@@ -32,7 +32,44 @@
 //  THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <Foundation/Foundation.h>
+//
+//
+// Accessory Types
+//
+//
+// Deprecated due to lack of use - TODO: delete
+//@interface Monero_Bridge_SpentOutputDescription: NSObject
+//
+//@property (nonatomic) uint64_t amount;
+//@property (nonatomic) uint64_t out_index;
+//@property (nonatomic) uint32_t mixin;
+//
+//@property (nonatomic, copy) NSString *tx_pub_key;
+//@property (nonatomic, copy) NSString *key_image;
+//
+//@end
+//
+//
+// NOTE: It'd be nice to avoid the duplicativeness of these Monero_Bridge classes and instances but it allows us to keep the Swift implementation in Swift… maybe eventually bring the Swift obj to ObjC land to avoid this
+@interface Monero_Bridge_HistoricalTransactionRecord: NSObject
 
+@property (nonatomic) uint64_t amount;
+@property (nonatomic) BOOL isIncoming;
+
+@property (nonatomic) uint32_t mixin;
+@property (nonatomic) uint64_t timestamp;
+@property (nonatomic) uint64_t unlockTime;
+@property (nonatomic) uint64_t height;
+@property (nonatomic) BOOL mempool; // aka is_unconfirmed
+
+@property (nonatomic, copy) NSString *txHash; // cannot call it -hash
+@property (nonatomic, copy) NSString *paymentId; // may be nil
+
+@end
+//
+//
+// Principal Type
+//
 @interface LightWallet3Wrapper: NSObject
 //
 // Imperatives - Lifecycle
@@ -61,6 +98,9 @@
 
 - (NSString *)address;
 - (NSString *)view_key__private;
+// TODO: remainder of keys
+
+- (NSArray *)timeOrdered_historicalTransactionRecords; // [Monero_Bridge_HistoricalTransactionRecord]; TODO: this used to sort by b.id-a.id in JS… is timestamp sort ok?
 
 @property (nonatomic, readonly) BOOL hasLWBeenInitialized; // is set to YES after successful call to any of the above -setupWalletWith_*
 

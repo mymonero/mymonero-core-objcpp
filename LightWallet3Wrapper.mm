@@ -50,14 +50,27 @@ using namespace crypto;
 using namespace cryptonote;
 //
 //
+// Accessory Types - Implementation
+//
+//@implementation Monero_Bridge_SpentOutputDescription
+//@end
+//
+@implementation Monero_Bridge_HistoricalTransactionRecord
+@end
+//
+//
+// Principal Type - Interface
+//
 @interface LightWallet3Wrapper ()
 {
 	tools::light_wallet3 *_wallet__ptr;
 }
-
 @property (nonatomic, readwrite) BOOL hasLWBeenInitialized;
-
+//
 @end
+//
+//
+// Principal Type - Implementation
 //
 @implementation LightWallet3Wrapper
 //
@@ -298,9 +311,62 @@ using namespace cryptonote;
 	];
 }
 
-// TODO remainder of keys
+//- (Monero_Bridge_SpentOutputDescription *)_new_descFrom_spendOutput:(const cryptonote::COMMAND_RPC_GET_ADDRESS_INFO::spent_output &)so
+//{
+//	Monero_Bridge_SpentOutputDescription *desc = [Monero_Bridge_SpentOutputDescription new];
+//	desc.amount = so.amount;
+//	desc.out_index = so.out_index;
+//	desc.mixin = so.mixin;
+//	desc.tx_pub_key = [NSString stringWithUTF8String:so.tx_pub_key.c_str()];
+//	desc.key_image = [NSString stringWithUTF8String:so.key_image.c_str()];
+//	//
+//	return desc;
+//}
+// Deprecated due to disuse
+//- (NSArray *)spentOutputDescriptions
+//{
+//	NSMutableArray *list = [NSMutableArray new];
+//	for (const auto &so: _wallet__ptr->spent_outputs()) {
+//		[list addObject:[self _new_descFrom_spendOutput:so]];
+//	}
+//	return list;
+//}
 
-// TODO: transactions
-
+- (NSArray *)timeOrdered_historicalTransactionRecords
+{
+	NSMutableArray *list = [NSMutableArray new];
+	for (std::pair<crypto::hash, light_wallet3::address_tx> pair: _wallet__ptr->address_txs()) {
+		Monero_Bridge_HistoricalTransactionRecord *rec = [Monero_Bridge_HistoricalTransactionRecord new];
+		{
+			rec.amount = pair.second.m_amount;
+			rec.isIncoming = pair.second.m_incoming;
+			rec.height = pair.second.m_block_height;
+			rec.mixin = pair.second.m_mixin;
+			rec.timestamp = pair.second.m_timestamp;
+			rec.unlockTime = pair.second.m_unlock_time;
+			rec.mempool = pair.second.m_mempool;
+			rec.txHash = [NSString stringWithUTF8String:
+				string_tools::pod_to_hex(pair.second.m_tx_hash).c_str()
+			];
+			rec.paymentId = pair.second.m_payment_id_string.empty() == false ? [NSString stringWithUTF8String:pair.second.m_payment_id_string.c_str()] : nil;
+		}
+		[list addObject:rec];
+	}
+	{
+		[list sortUsingComparator:^NSComparisonResult(
+			Monero_Bridge_HistoricalTransactionRecord *_Nonnull obj1,
+			Monero_Bridge_HistoricalTransactionRecord *_Nonnull obj2
+		) {
+			uint64_t d = obj2.timestamp - obj1.timestamp;
+			if (d == 0) {
+				return NSOrderedSame;
+			} else if (d > 0) {
+				return NSOrderedDescending;
+			}
+			return NSOrderedAscending;
+		}];
+	}
+	return list;
+}
 
 @end
