@@ -188,7 +188,7 @@ using namespace cryptonote;
 		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
 		return NO;
 	}
-	cryptonote::COMMAND_RPC_GET_ADDRESS_INFO::response ires;
+	light_wallet3_server_api::COMMAND_RPC_GET_ADDRESS_INFO::response ires;
 	if (didError) {
 		_wallet__ptr->ingest__get_address_info(true, ires); // ires will have zeroed state by this point but method won't look at ires given didError
 		return YES;
@@ -207,7 +207,7 @@ using namespace cryptonote;
 		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
 		return NO;
 	}
-	cryptonote::COMMAND_RPC_GET_ADDRESS_TXS::response ires;
+	light_wallet3_server_api::COMMAND_RPC_GET_ADDRESS_TXS::response ires;
 	bool r = epee::serialization::load_t_from_json(ires, std::string(response_jsonString.UTF8String));
 	if (!r) {
 		return NO;
@@ -342,7 +342,9 @@ using namespace cryptonote;
 			rec.isIncoming = pair.second.m_incoming;
 			rec.height = pair.second.m_block_height;
 			rec.mixin = pair.second.m_mixin;
-			rec.timestamp = pair.second.m_timestamp;
+			rec.timestampDate = [NSDate dateWithTimeIntervalSince1970: // TODO: is this correct?
+				(NSTimeInterval)pair.second.m_timestamp
+			];
 			rec.unlockTime = pair.second.m_unlock_time;
 			rec.mempool = pair.second.m_mempool;
 			rec.txHash = [NSString stringWithUTF8String:
@@ -357,13 +359,7 @@ using namespace cryptonote;
 			Monero_Bridge_HistoricalTransactionRecord *_Nonnull obj1,
 			Monero_Bridge_HistoricalTransactionRecord *_Nonnull obj2
 		) {
-			uint64_t d = obj2.timestamp - obj1.timestamp;
-			if (d == 0) {
-				return NSOrderedSame;
-			} else if (d > 0) {
-				return NSOrderedDescending;
-			}
-			return NSOrderedAscending;
+			return [obj2.timestampDate compare:obj1.timestampDate];
 		}];
 	}
 	return list;

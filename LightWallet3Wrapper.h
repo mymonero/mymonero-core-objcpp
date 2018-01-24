@@ -57,7 +57,7 @@
 @property (nonatomic) BOOL isIncoming;
 
 @property (nonatomic) uint32_t mixin;
-@property (nonatomic) uint64_t timestamp;
+@property (nonatomic) NSDate *timestampDate;
 @property (nonatomic) uint64_t unlockTime;
 @property (nonatomic) uint64_t height;
 @property (nonatomic) BOOL mempool; // aka is_unconfirmed
