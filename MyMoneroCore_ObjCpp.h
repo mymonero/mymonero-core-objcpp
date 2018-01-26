@@ -44,17 +44,6 @@
 @property (nonatomic, copy) NSString *paymentID_NSString_orNil;
 
 @end
-
-
-@interface Monero_GetRandomOutsBlock_RetVals: NSObject
-
-@property (nonatomic, copy) NSString *errStr_orNil;
-
-//@class MoneroRandomAmountAndOutputs;
-//@class MoneroRandomOutputDescription;
-@property (nonatomic, strong) NSArray *mixOuts;
-
-@end
 //
 @interface MyMoneroCore_ObjCpp : NSObject
 //
@@ -136,21 +125,4 @@
 				pub_spendKey:(NSString *)pub_spendKey_NSString
 				out_index:(uint64_t)out_index;
 //
-- (void)new_serializedSignedTransactionTo_address:(NSString *)to_address
-										payment_id:(NSString *)optl__payment_id_NSString
-							 amount_float_NSString:(NSString *)amount_float_NSString
-										sec_viewKey:(NSString *)sec_viewKey
-										sec_spendKey:(NSString *)sec_spendKey
-									blockchain_size:(uint64_t)blockchain_size
-										priority:(uint32_t)priority // this must be a number between but not including 0 and 5
-										unusedOuts:(NSArray *)unusedOuts // [Monero_OutputDescription_BridgeObj]
-							getRandomOuts__block:(void(^ __nonnull )(void(^__nonnull)(Monero_GetRandomOutsBlock_RetVals * __nonnull cb)))getRandomOuts__block
-											fn:(void(^ __nonnull )(
-													NSString *errStr_orNil,
-													//
-													NSArray<NSString *> *rct_signatures,
-													NSString *extra
-													)
-												)fn;
-
 @end

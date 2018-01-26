@@ -57,15 +57,27 @@
 @property (nonatomic) BOOL isIncoming;
 
 @property (nonatomic) uint32_t mixin;
-@property (nonatomic) NSDate *timestampDate;
+@property (nonatomic) NSDate * _Nonnull timestampDate;
 @property (nonatomic) uint64_t unlockTime;
 @property (nonatomic) uint64_t height;
 @property (nonatomic) BOOL mempool; // aka is_unconfirmed
 
-@property (nonatomic, copy) NSString *txHash; // cannot call it -hash
-@property (nonatomic, copy) NSString *paymentId; // may be nil
+@property (nonatomic, copy) NSString * _Nonnull txHash; // cannot call it -hash
+@property (nonatomic, copy) NSString * _Nullable paymentId; // may be nil
 
 @end
+//
+
+@interface Monero_Bridge_GetRandomOutsBlock_RetVals: NSObject
+
+@property (nonatomic, copy) NSString * _Nullable errStr_orNil;
+
+//@class MoneroRandomAmountAndOutputs;
+//@class MoneroRandomOutputDescription;
+@property (nonatomic, strong) NSArray * _Nullable mixOuts;
+
+@end
+
 //
 //
 // Principal Type
@@ -73,17 +85,19 @@
 @interface LightWallet3Wrapper: NSObject
 //
 // Imperatives - Lifecycle
-- (id)init; // designated initializer
+- (_Nonnull instancetype)init; // designated initializer
 // then call one of
-- (BOOL)setupWalletWith_mnemonicSeed:(NSString *)mnemonicSeed_NSString
-					mnemonicLanguage:(NSString *)mnemonicLanguage_NSString;
-- (BOOL)setupWalletWith_address:(NSString *)address_NSString
-						viewkey:(NSString *)viewkey_NSString
-					   spendkey:(NSString *)spendkey_NSString;
+- (BOOL)setupWalletWith_mnemonicSeed:(NSString * _Nonnull)mnemonicSeed_NSString
+					mnemonicLanguage:(NSString * _Nonnull)mnemonicLanguage_NSString;
+- (BOOL)setupWalletWith_address:(NSString * _Nonnull)address_NSString
+						viewkey:(NSString * _Nonnull)viewkey_NSString
+					   spendkey:(NSString * _Nonnull)spendkey_NSString;
+@property (nonatomic, readonly) BOOL hasLWBeenInitialized; // is set to YES after successful call to any of the above -setupWalletWith_*
 //
-// Imperatives - Runtime
-- (BOOL)ingestJSONString_addressInfo:(NSString *)response_jsonString or_didError:(BOOL)didError; // returns NO on parse err
-- (BOOL)ingestJSONString_addressTxs:(NSString *)response_jsonString; // returns NO on parse err
+// Imperatives - Runtime - Server API response
+- (BOOL)ingestJSONString_addressInfo:(NSString * _Nonnull)response_jsonString or_didError:(BOOL)didError; // returns NO on parse err
+- (BOOL)ingestJSONString_addressTxs:(NSString * _Nonnull)response_jsonString; // returns NO on parse err
+- (BOOL)ingestJSONString_unspentOuts:(NSString * _Nonnull)response_jsonString mixinSize:(uint32_t)mixinSize;
 //
 // Accessors
 - (uint64_t)scanned_height;
@@ -96,13 +110,23 @@
 - (uint64_t)total_sent;
 - (uint64_t)total_received;
 
-- (NSString *)address;
-- (NSString *)view_key__private;
-// TODO: remainder of keys
+- (NSString * _Nonnull)address;
+- (NSString * _Nonnull)view_key__private;
+- (NSString * _Nonnull)spend_key__private;
 
-- (NSArray *)timeOrdered_historicalTransactionRecords; // [Monero_Bridge_HistoricalTransactionRecord]; TODO: this used to sort by b.id-a.id in JS… is timestamp sort ok?
+- (NSArray * _Nonnull)timeOrdered_historicalTransactionRecords; // [Monero_Bridge_HistoricalTransactionRecord]; TODO: this used to sort by b.id-a.id in JS… is timestamp sort ok?
+//
+// Transferring
+// NOTE: before you call -new_serializedSigned…, set be sure to have set getRandomOuts__block
+@property (nonatomic, copy) void (^ _Nullable getRandomOuts__block)(void(^ _Nonnull cb)(Monero_Bridge_GetRandomOutsBlock_RetVals * _Nonnull retVals));
 
-@property (nonatomic, readonly) BOOL hasLWBeenInitialized; // is set to YES after successful call to any of the above -setupWalletWith_*
-
-
+- (void)new_serializedSignedTransactionWithTo_address:(NSString * __nonnull)to_address
+								  amount_float_string:(NSString * __nonnull)amount_float_string
+										   payment_id:(NSString * __nullable)optl__payment_id
+											 priority:(uint32_t)simplePriority // this must be a number between (not including) 0 and 5
+												   fn:(void(^ __nonnull)(
+																		 NSString * __nullable errStr,
+																		 NSString * __nullable serializedSignedTransactionString
+															   )
+													   )fn;
 @end

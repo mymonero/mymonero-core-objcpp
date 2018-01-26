@@ -52,11 +52,14 @@ using namespace cryptonote;
 //
 // Accessory Types - Implementation
 //
-//@implementation Monero_Bridge_SpentOutputDescription
-//@end
+@implementation Monero_Bridge_GetRandomOutsBlock_RetVals
+@end
 //
 @implementation Monero_Bridge_HistoricalTransactionRecord
 @end
+//
+//@implementation Monero_Bridge_SpentOutputDescription
+//@end
 //
 //
 // Principal Type - Interface
@@ -216,6 +219,21 @@ using namespace cryptonote;
 	//
 	return YES;
 }
+- (BOOL)ingestJSONString_unspentOuts:(NSString *)response_jsonString mixinSize:(uint32_t)mixinSize
+{
+	if (!_wallet__ptr || !self.hasLWBeenInitialized) {
+		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
+		return NO;
+	}
+	light_wallet3_server_api::COMMAND_RPC_GET_UNSPENT_OUTS::response ores;
+	bool r = epee::serialization::load_t_from_json(ores, std::string(response_jsonString.UTF8String));
+	if (!r) {
+		return NO;
+	}
+	_wallet__ptr->ingest__get_unspent_outs(ires, mixinSize);
+	//
+	return YES;
+}
 //
 //
 // Interface - Accessors - Bridged parsed received data
@@ -310,6 +328,18 @@ using namespace cryptonote;
 		).c_str()
 	];
 }
+- (NSString *)spend_key__private
+{
+	if (!_wallet__ptr || !self.hasLWBeenInitialized) {
+		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
+		return nil;
+	}
+	return [NSString stringWithUTF8String:
+		string_tools::pod_to_hex(
+			_wallet__ptr->get_account().get_keys().m_spend_secret_key
+		).c_str()
+	];
+}
 
 //- (Monero_Bridge_SpentOutputDescription *)_new_descFrom_spendOutput:(const cryptonote::COMMAND_RPC_GET_ADDRESS_INFO::spent_output &)so
 //{
@@ -365,4 +395,91 @@ using namespace cryptonote;
 	return list;
 }
 
+- (void)new_serializedSignedTransactionWithTo_address:(NSString * __nonnull)to_address
+								  amount_float_string:(NSString * __nonnull)amount_float_NSString
+										   payment_id:(NSString * __nullable)optl__payment_id_NSString
+											 priority:(uint32_t)simplePriority // this must be a number between (not including) 0 and 5
+												   fn:(void(^ __nonnull)(NSString * __nullable errStr,
+																		 NSString * __nullable serializedSignedTransactionString
+																		 )
+													   )fn
+{
+	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
+	{
+		fn(
+		   errStr,
+		   //
+		   nil
+	   );
+	};
+	//
+	if (!_wallet__ptr || !self.hasLWBeenInitialized) {
+		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
+		_doFn_withErrStr(NSLocalizedString(@"An application error has occurred", nil));
+		return;
+	}
+	//
+	void (^ getRandomOuts__block)(void(^ cb)(Monero_Bridge_GetRandomOutsBlock_RetVals *retVals)) = self.getRandomOuts__block;
+	if (getRandomOuts__block == nil) {
+		NSAssert(false, @"LightWallet3Wrapper.getRandomOuts__block must be set to construct a transaction");
+		_doFn_withErrStr(NSLocalizedString(@"", nil));
+		return;
+	}
+	//
+	const std::string *paymentID_string__ptr = nullptr;
+	std::string paymentID_string;
+	if (optl__payment_id_NSString) {
+		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
+		paymentID_string__ptr = &paymentID_string;
+	}
+	//
+	std::function<bool(
+		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
+		const std::list<size_t> &,
+		size_t
+	)> get_random_outs_fn = [
+		getRandomOuts__block
+	] (
+		std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,
+		const std::list<size_t> &selected_transfers,
+		size_t fake_outputs_count
+	) -> bool {
+		//
+		// TODO pass fake_outputs_count etc as required to getRandomOuts
+		getRandomOuts__block(^(Monero_Bridge_GetRandomOutsBlock_RetVals *retVals)
+		{
+			NSLog(@"retvals %@", retVals);
+			// TODO: now that we have retVals
+			if (retVals.errStr_orNil != nil) {
+				// TODO: return nil to create tx calling this random out and fail there … which should trigger fn to be called
+				return; // prevent fallthrough
+			}
+			//
+			// ---TODO---: pass retVals mixOuts back after adding callback or some other way to return…
+			//
+		});
+		//
+		return false; // TODO: need/want this flag?
+	};
+	//
+	BOOL didSucceed = _wallet__ptr->create_signed_transaction();
+	// TODO
+//	if (retVals.didError) {
+//		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
+//		_doFn_withErrStr(errStr);
+//		return;
+//	}
+	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
+
+	std::string to_address_string = std::string(to_address.UTF8String);
+	std::string amount_float_string = std::string(amount_float_NSString.UTF8String);
+
+	NSString *signedSerializedTransaction_NSString = nil; // TODO
+	//
+	fn(
+	   nil,
+	   //
+	   signedSerializedTransaction_NSString
+	);
+}
 @end
