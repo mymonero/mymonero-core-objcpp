@@ -400,11 +400,11 @@ using namespace epee;
 	).c_str()];
 }
 //
-- (size_t)fixedRingsize
+- (uint32_t)fixedRingsize
 {
 	return monero_transfer_utils::fixed_ringsize();
 }
-- (size_t)fixedMixinsize
+- (uint32_t)fixedMixinsize
 {
 	return monero_transfer_utils::fixed_mixinsize();
 }

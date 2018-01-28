@@ -230,7 +230,7 @@ using namespace cryptonote;
 	if (!r) {
 		return NO;
 	}
-	_wallet__ptr->ingest__get_unspent_outs(ires, mixinSize);
+	_wallet__ptr->ingest__get_unspent_outs(ores, mixinSize);
 	//
 	return YES;
 }
@@ -398,7 +398,7 @@ using namespace cryptonote;
 - (void)new_serializedSignedTransactionWithTo_address:(NSString * __nonnull)to_address
 								  amount_float_string:(NSString * __nonnull)amount_float_NSString
 										   payment_id:(NSString * __nullable)optl__payment_id_NSString
-											 priority:(uint32_t)simplePriority // this must be a number between (not including) 0 and 5
+											 priority:(uint32_t)simple_priority // this must be a number between (not including) 0 and 5
 												   fn:(void(^ __nonnull)(NSString * __nullable errStr,
 																		 NSString * __nullable serializedSignedTransactionString
 																		 )
@@ -426,11 +426,11 @@ using namespace cryptonote;
 		return;
 	}
 	//
-	const std::string *paymentID_string__ptr = nullptr;
-	std::string paymentID_string;
+	const std::string *optl__payment_id_string_ptr = nullptr;
+	std::string payment_id_string; // to hold 
 	if (optl__payment_id_NSString) {
-		paymentID_string = std::string(optl__payment_id_NSString.UTF8String);
-		paymentID_string__ptr = &paymentID_string;
+		payment_id_string = std::string(optl__payment_id_NSString.UTF8String);
+		optl__payment_id_string_ptr = &payment_id_string;
 	}
 	//
 	std::function<bool(
@@ -462,7 +462,16 @@ using namespace cryptonote;
 		return false; // TODO: need/want this flag?
 	};
 	//
-	BOOL didSucceed = _wallet__ptr->create_signed_transaction();
+
+	std::string to_address_string = std::string(to_address.UTF8String);
+	std::string amount_float_string = std::string(amount_float_NSString.UTF8String);
+	//
+	BOOL didSucceed = _wallet__ptr->create_signed_transaction(
+		to_address_string,
+		amount_float_string,
+		optl__payment_id_string_ptr,
+		simple_priority
+	);
 	// TODO
 //	if (retVals.didError) {
 //		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
@@ -470,9 +479,6 @@ using namespace cryptonote;
 //		return;
 //	}
 	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
-
-	std::string to_address_string = std::string(to_address.UTF8String);
-	std::string amount_float_string = std::string(amount_float_NSString.UTF8String);
 
 	NSString *signedSerializedTransaction_NSString = nil; // TODO
 	//

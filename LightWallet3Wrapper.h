@@ -123,7 +123,7 @@
 - (void)new_serializedSignedTransactionWithTo_address:(NSString * __nonnull)to_address
 								  amount_float_string:(NSString * __nonnull)amount_float_string
 										   payment_id:(NSString * __nullable)optl__payment_id
-											 priority:(uint32_t)simplePriority // this must be a number between (not including) 0 and 5
+											 priority:(uint32_t)simple_priority // this must be a number between (not including) 0 and 5
 												   fn:(void(^ __nonnull)(
 																		 NSString * __nullable errStr,
 																		 NSString * __nullable serializedSignedTransactionString
