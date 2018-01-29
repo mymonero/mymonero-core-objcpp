@@ -100,6 +100,9 @@ using namespace cryptonote;
 	if (!_wallet__ptr) {
 		return nil;
 	}
+	_wallet__ptr->init(
+		0 // m_upper_transaction_size_limit
+	);
 	//
 	return self;
 }
@@ -470,7 +473,8 @@ using namespace cryptonote;
 		to_address_string,
 		amount_float_string,
 		optl__payment_id_string_ptr,
-		simple_priority
+		simple_priority,
+		get_random_outs_fn
 	);
 	// TODO
 //	if (retVals.didError) {
