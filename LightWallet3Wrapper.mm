@@ -440,13 +440,13 @@ using namespace cryptonote;
 	//
 	std::function<bool(
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
-		const std::list<size_t> &,
+		const std::vector<size_t> &,
 		size_t
 	)> get_random_outs_fn = [
 		getRandomOuts__block
 	] (
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,
-		const std::list<size_t> &selected_transfers,
+		const std::vector<size_t> &selected_transfers,
 		size_t fake_outputs_count
 	) -> bool {
 		//
