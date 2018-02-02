@@ -322,7 +322,7 @@ using namespace epee;
 	};
 	monero_wallet_utils::WalletComponentsValidationResults outputs;
 	BOOL didSucceed = monero_wallet_utils::validate_wallet_components_with(inputs, outputs);
-	if (outputs.didError) {
+	if (outputs.did_error) {
 		NSString *errStr = [NSString stringWithUTF8String:outputs.err_string.c_str()];
 		_doFn_withErrStr(errStr);
 		return;

@@ -43,6 +43,7 @@
 #include "monero_wallet_utils.hpp"
 #include "electrum-words.h"
 #include "mnemonics/english.h"
+#include "monero_transfer_utils.hpp"
 //
 using namespace epee; // for string_tools
 using namespace tools;
@@ -409,8 +410,9 @@ using namespace cryptonote;
 {
 	void (^_doFn_withErrStr)(NSString *) = ^void(NSString *errStr)
 	{
+		NSString *capitalized_errStr = [NSString stringWithFormat:@"%@%@", [[errStr substringToIndex:1] uppercaseString], [errStr substringFromIndex:1]];
 		fn(
-		   errStr,
+		   capitalized_errStr, // because errors are often passed lowercased
 		   //
 		   nil
 	   );
@@ -425,7 +427,7 @@ using namespace cryptonote;
 	void (^ getRandomOuts__block)(void(^ cb)(Monero_Bridge_GetRandomOutsBlock_RetVals *retVals)) = self.getRandomOuts__block;
 	if (getRandomOuts__block == nil) {
 		NSAssert(false, @"LightWallet3Wrapper.getRandomOuts__block must be set to construct a transaction");
-		_doFn_withErrStr(NSLocalizedString(@"", nil));
+		_doFn_withErrStr(NSLocalizedString(@"Code fault", nil));
 		return;
 	}
 	//
@@ -464,32 +466,42 @@ using namespace cryptonote;
 		//
 		return false; // TODO: need/want this flag?
 	};
-	//
-
-	std::string to_address_string = std::string(to_address.UTF8String);
-	std::string amount_float_string = std::string(amount_float_NSString.UTF8String);
-	//
-	BOOL didSucceed = _wallet__ptr->create_signed_transaction(
-		to_address_string,
-		amount_float_string,
+	std::function<void(
+		bool,
+		boost::optional<std::string>,
+		boost::optional<tools::wallet2::signed_tx_set>
+	)> finished_fn = [
+		fn,
+		_doFn_withErrStr
+	](
+		bool did_error,
+		boost::optional<std::string> err_string,
+		boost::optional<tools::wallet2::signed_tx_set> signed_tx_set
+	) -> void {
+		if (did_error) {
+			return;
+		}
+		NSString *signedSerializedTransaction_NSString = nil; // TODO
+		fn(nil, signedSerializedTransaction_NSString);
+	};
+	monero_transfer_utils::CreateSignedTxs_RetVals retVals;
+	BOOL r = _wallet__ptr->create_signed_transaction(
+		std::string(to_address.UTF8String),
+		std::string(amount_float_NSString.UTF8String),
 		optl__payment_id_string_ptr,
 		simple_priority,
-		get_random_outs_fn
+		get_random_outs_fn,
+		//
+		retVals
 	);
-	// TODO
-//	if (retVals.didError) {
-//		NSString *errStr = [NSString stringWithUTF8String:retVals.err_string.c_str()];
-//		_doFn_withErrStr(errStr);
-//		return;
-//	}
-	NSAssert(didSucceed, @"Found unexpectedly didSucceed=false without an error");
-
+	if (retVals.did_error) {
+		NSString *errStr = [NSString stringWithUTF8String:(*(retVals.err_string)).c_str()];
+		_doFn_withErrStr(errStr);
+		return;
+	}
+	NSAssert(r, @"Found unexpectedly didSucceed=false without an error"); // NOTE: unlike cpp code, asserting the positive here
 	NSString *signedSerializedTransaction_NSString = nil; // TODO
 	//
-	fn(
-	   nil,
-	   //
-	   signedSerializedTransaction_NSString
-	);
+	fn(nil, signedSerializedTransaction_NSString);
 }
 @end
