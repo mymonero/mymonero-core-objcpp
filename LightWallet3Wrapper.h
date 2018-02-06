@@ -67,18 +67,6 @@
 
 @end
 //
-
-@interface Monero_Bridge_GetRandomOutsBlock_RetVals: NSObject
-
-@property (nonatomic, copy) NSString * _Nullable errStr_orNil;
-
-//@class MoneroRandomAmountAndOutputs;
-//@class MoneroRandomOutputDescription;
-@property (nonatomic, strong) NSArray * _Nullable mixOuts;
-
-@end
-
-//
 //
 // Principal Type
 //
@@ -118,7 +106,16 @@
 //
 // Transferring
 // NOTE: before you call -new_serializedSigned…, set be sure to have set getRandomOuts__block
-@property (nonatomic, copy) void (^ _Nullable getRandomOuts__block)(void(^ _Nonnull cb)(Monero_Bridge_GetRandomOutsBlock_RetVals * _Nonnull retVals));
+@property (nonatomic, copy) void (^ _Nullable getRandomOuts__block)(
+	NSArray * _Nonnull amountStrings,
+	uint32_t count,
+	NSValue * _Nonnull promiseInValue,
+	void(^ _Nonnull cb)(
+		NSString * _Nullable errStr_orNil,
+		NSString * _Nullable response_jsonString,
+		NSValue * _Nonnull returned_promiseInValue
+	)
+);
 
 - (void)new_serializedSignedTransactionWithTo_address:(NSString * __nonnull)to_address
 								  amount_float_string:(NSString * __nonnull)amount_float_string

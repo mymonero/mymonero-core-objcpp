@@ -44,6 +44,7 @@
 #include "electrum-words.h"
 #include "mnemonics/english.h"
 #include "monero_transfer_utils.hpp"
+#include <future>
 //
 using namespace epee; // for string_tools
 using namespace tools;
@@ -53,14 +54,8 @@ using namespace cryptonote;
 //
 // Accessory Types - Implementation
 //
-@implementation Monero_Bridge_GetRandomOutsBlock_RetVals
-@end
-//
 @implementation Monero_Bridge_HistoricalTransactionRecord
 @end
-//
-//@implementation Monero_Bridge_SpentOutputDescription
-//@end
 //
 //
 // Principal Type - Interface
@@ -424,7 +419,7 @@ using namespace cryptonote;
 		return;
 	}
 	//
-	void (^ getRandomOuts__block)(void(^ cb)(Monero_Bridge_GetRandomOutsBlock_RetVals *retVals)) = self.getRandomOuts__block;
+	void (^ getRandomOuts__block)(NSArray * _Nonnull amountStrings, uint32_t count, NSValue *promiseInValue, void(^ cb)(NSString * _Nullable errStr_orNil, NSString * _Nullable response_jsonString, NSValue *returned_promiseInValue)) = self.getRandomOuts__block;
 	if (getRandomOuts__block == nil) {
 		NSAssert(false, @"LightWallet3Wrapper.getRandomOuts__block must be set to construct a transaction");
 		_doFn_withErrStr(NSLocalizedString(@"Code fault", nil));
@@ -438,33 +433,74 @@ using namespace cryptonote;
 		optl__payment_id_string_ptr = &payment_id_string;
 	}
 	//
+	tools::light_wallet3 *this_wallet__ptr = _wallet__ptr; // for capture
 	std::function<bool(
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
 		const std::vector<size_t> &,
 		size_t
 	)> get_random_outs_fn = [
-		getRandomOuts__block
+		getRandomOuts__block,
+		this_wallet__ptr
 	] (
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,
 		const std::vector<size_t> &selected_transfers,
 		size_t fake_outputs_count
 	) -> bool {
-		//
-		// TODO pass fake_outputs_count etc as required to getRandomOuts
-		getRandomOuts__block(^(Monero_Bridge_GetRandomOutsBlock_RetVals *retVals)
-		{
-			NSLog(@"retvals %@", retVals);
-			// TODO: now that we have retVals
-			if (retVals.errStr_orNil != nil) {
-				// TODO: return nil to create tx calling this random out and fail there … which should trigger fn to be called
-				return; // prevent fallthrough
+		NSMutableArray *amountStrings = [NSMutableArray new];
+		{ // construct amounts for request
+			std::vector<std::string> amounts;
+			this_wallet__ptr->populate_amount_strings_for_get_random_outs(selected_transfers, amounts);
+			for (std::string amount_string: amounts) {
+				NSString *amountString = [NSString stringWithUTF8String:amount_string.c_str()];
+				[amountStrings addObject:amountString];
 			}
-			//
-			// ---TODO---: pass retVals mixOuts back after adding callback or some other way to return…
-			//
-		});
+		}
+  		uint32_t requested_outputs_count = this_wallet__ptr->requested_outputs_count(fake_outputs_count); // TODO: mymonero simple uses fake_outputs_count... use that instead?
 		//
-		return false; // TODO: need/want this flag?
+		auto promise = std::promise<light_wallet3::get_rand_outs_promise_ret_vals>();
+		NSValue *promiseInValue = [NSValue valueWithBytes:&promise objCType:@encode(std::promise<int>)];
+		getRandomOuts__block(
+			amountStrings,
+			requested_outputs_count,
+			promiseInValue, // using an NSValue means ownership will not be transferred
+			^(NSString *errStr_orNil, NSString *response_jsonString, NSValue *returned_promiseInValue)
+			{
+				bool did_error = errStr_orNil != nil ? true : false;
+				boost::optional<std::string> optl__err_string, optl__response_json_string = boost::none;
+				if (did_error) {
+					optl__err_string = std::string(errStr_orNil.UTF8String);
+				} else {
+					optl__response_json_string = std::string(response_jsonString.UTF8String);
+				}
+				light_wallet3::get_rand_outs_promise_ret_vals promise_ret_vals =
+				{
+					did_error,
+					optl__err_string,
+					//
+					optl__response_json_string
+				};
+				//
+				std::promise<light_wallet3::get_rand_outs_promise_ret_vals> returned_promise;
+				[returned_promiseInValue getValue:&returned_promise];
+				returned_promise.set_value(promise_ret_vals);
+			}
+		);
+		std::future<light_wallet3::get_rand_outs_promise_ret_vals> future = promise.get_future();
+		light_wallet3::get_rand_outs_promise_ret_vals ret_vals = future.get();
+		if (ret_vals.did_error) {
+			return false; // TODO: return err_string somehow?
+		}
+		light_wallet3_server_api::COMMAND_RPC_GET_RANDOM_OUTS::response ores;
+		bool r = epee::serialization::load_t_from_json(ores, *ret_vals.response_json_string);
+		if (!r) {
+			return false;
+		}
+		r = this_wallet__ptr->populate_from__get_random_outs(ores, outs, selected_transfers, fake_outputs_count, requested_outputs_count);
+		if (!r) { // TODO: receive and return err_string
+			return false;
+		}
+		//
+		return true;
 	};
 	std::function<void(
 		bool,
