@@ -437,15 +437,19 @@ using namespace cryptonote;
 	std::function<bool(
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &,
 		const std::vector<size_t> &,
-		size_t
+		size_t,
+		monero_transfer_utils::get_random_outs_fn_RetVals &
 	)> get_random_outs_fn = [
 		getRandomOuts__block,
 		this_wallet__ptr
 	] (
 		std::vector<std::vector<tools::wallet2::get_outs_entry>> &outs,
 		const std::vector<size_t> &selected_transfers,
-		size_t fake_outputs_count
+		size_t fake_outputs_count,
+		monero_transfer_utils::get_random_outs_fn_RetVals &fn_retVals
 	) -> bool {
+		fn_retVals = {}; // initializing for consumer
+		//
 		NSMutableArray *amountStrings = [NSMutableArray new];
 		{ // construct amounts for request
 			std::vector<std::string> amounts;
@@ -457,6 +461,7 @@ using namespace cryptonote;
 		}
   		uint32_t requested_outputs_count = this_wallet__ptr->requested_outputs_count(fake_outputs_count); // TODO: mymonero simple uses fake_outputs_count... use that instead?
 		//
+		// the following sequence must remain synchronous, therefore a promise is used; it must be given to objc-land
 		auto promise = std::promise<light_wallet3::get_rand_outs_promise_ret_vals>();
 		NSValue *promiseInValue = [NSValue valueWithBytes:&promise objCType:@encode(std::promise<int>)];
 		getRandomOuts__block(
@@ -465,60 +470,44 @@ using namespace cryptonote;
 			promiseInValue, // using an NSValue means ownership will not be transferred
 			^(NSString *errStr_orNil, NSString *response_jsonString, NSValue *returned_promiseInValue)
 			{
-				bool did_error = errStr_orNil != nil ? true : false;
-				boost::optional<std::string> optl__err_string, optl__response_json_string = boost::none;
-				if (did_error) {
-					optl__err_string = std::string(errStr_orNil.UTF8String);
-				} else {
-					optl__response_json_string = std::string(response_jsonString.UTF8String);
+				light_wallet3::get_rand_outs_promise_ret_vals promise_ret_vals = {};
+				{ // finalize
+					bool block__did_error = errStr_orNil != nil ? true : false;
+					if (block__did_error) {
+						promise_ret_vals.did_error = block__did_error;
+						promise_ret_vals.err_string = std::string(errStr_orNil.UTF8String);
+					} else {
+						promise_ret_vals.response_json_string = std::string(response_jsonString.UTF8String);
+					}
 				}
-				light_wallet3::get_rand_outs_promise_ret_vals promise_ret_vals =
-				{
-					did_error,
-					optl__err_string,
-					//
-					optl__response_json_string
-				};
-				//
 				std::promise<light_wallet3::get_rand_outs_promise_ret_vals> returned_promise;
-				[returned_promiseInValue getValue:&returned_promise];
+				{ // finalize
+					[returned_promiseInValue getValue:&returned_promise];
+				}
 				returned_promise.set_value(promise_ret_vals);
 			}
 		);
 		std::future<light_wallet3::get_rand_outs_promise_ret_vals> future = promise.get_future();
 		light_wallet3::get_rand_outs_promise_ret_vals ret_vals = future.get();
 		if (ret_vals.did_error) {
-			return false; // TODO: return err_string somehow?
+			fn_retVals.did_error = true;
+			fn_retVals.err_string = *ret_vals.err_string;
+			return false;
 		}
 		light_wallet3_server_api::COMMAND_RPC_GET_RANDOM_OUTS::response ores;
 		bool r = epee::serialization::load_t_from_json(ores, *ret_vals.response_json_string);
 		if (!r) {
 			return false;
 		}
-		r = this_wallet__ptr->populate_from__get_random_outs(ores, outs, selected_transfers, fake_outputs_count, requested_outputs_count);
-		if (!r) { // TODO: receive and return err_string
+		RetVals_base populate_retVals;
+		r = this_wallet__ptr->populate_from__get_random_outs(ores, outs, selected_transfers, fake_outputs_count, requested_outputs_count, populate_retVals);
+		if (!r) {
+			fn_retVals.did_error = true;
+			fn_retVals.err_string = *populate_retVals.err_string;
 			return false;
 		}
 		//
 		return true;
-	};
-	std::function<void(
-		bool,
-		boost::optional<std::string>,
-		boost::optional<tools::wallet2::signed_tx_set>
-	)> finished_fn = [
-		fn,
-		_doFn_withErrStr
-	](
-		bool did_error,
-		boost::optional<std::string> err_string,
-		boost::optional<tools::wallet2::signed_tx_set> signed_tx_set
-	) -> void {
-		if (did_error) {
-			return;
-		}
-		NSString *signedSerializedTransaction_NSString = nil; // TODO
-		fn(nil, signedSerializedTransaction_NSString);
 	};
 	monero_transfer_utils::CreateSignedTxs_RetVals retVals;
 	BOOL r = _wallet__ptr->create_signed_transaction(
@@ -536,7 +525,8 @@ using namespace cryptonote;
 		return;
 	}
 	NSAssert(r, @"Found unexpectedly didSucceed=false without an error"); // NOTE: unlike cpp code, asserting the positive here
-	NSString *signedSerializedTransaction_NSString = nil; // TODO
+	NSString *signedSerializedTransaction_NSString = nil; // TODO: get this from retVals		boost::optional<tools::wallet2::signed_tx_set> signed_tx_set;
+
 	//
 	fn(nil, signedSerializedTransaction_NSString);
 }

@@ -105,7 +105,7 @@ using namespace epee;
 	bool did_error = retVals.did_error;
 	if (!r) {
 		NSAssert(did_error, @"Illegal: fail flag but !did_error");
-		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()]);
+		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.err_string).c_str()]);
 		return NO;
 	}
 	NSAssert(!did_error, @"Illegal: success flag but did_error");
@@ -226,7 +226,7 @@ using namespace epee;
 	bool did_error = retVals.did_error;
 	if (!r) {
 		NSAssert(did_error, @"Illegal: fail flag but !did_error");
-		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.optl__err_string).c_str()]);
+		_doFn_withErrStr([NSString stringWithUTF8String:(*retVals.err_string).c_str()]);
 		return NO;
 	}
 	NSAssert(!did_error, @"Illegal: success flag but did_error");
@@ -323,7 +323,7 @@ using namespace epee;
 	monero_wallet_utils::WalletComponentsValidationResults outputs;
 	BOOL didSucceed = monero_wallet_utils::validate_wallet_components_with(inputs, outputs);
 	if (outputs.did_error) {
-		NSString *errStr = [NSString stringWithUTF8String:outputs.err_string.c_str()];
+		NSString *errStr = [NSString stringWithUTF8String:(*outputs.err_string).c_str()];
 		_doFn_withErrStr(errStr);
 		return;
 	}
@@ -468,7 +468,7 @@ using namespace epee;
 	{
 		bool r = monero_key_image_utils::new__key_image(pub_spendKey, sec_spendKey, sec_viewKey, tx_pub_key, out_index, retVals);
 		if (!r) {
-			return nil; // TODO: return error string?
+			return nil; // TODO: return error string? (unwrap optional)
 		}
 	}
 	std::string key_image_hex_string = string_tools::pod_to_hex(retVals.calculated_key_image);

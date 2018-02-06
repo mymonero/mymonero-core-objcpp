@@ -36,20 +36,6 @@
 //
 // Accessory Types
 //
-//
-// Deprecated due to lack of use - TODO: delete
-//@interface Monero_Bridge_SpentOutputDescription: NSObject
-//
-//@property (nonatomic) uint64_t amount;
-//@property (nonatomic) uint64_t out_index;
-//@property (nonatomic) uint32_t mixin;
-//
-//@property (nonatomic, copy) NSString *tx_pub_key;
-//@property (nonatomic, copy) NSString *key_image;
-//
-//@end
-//
-//
 // NOTE: It'd be nice to avoid the duplicativeness of these Monero_Bridge classes and instances but it allows us to keep the Swift implementation in Swift… maybe eventually bring the Swift obj to ObjC land to avoid this
 @interface Monero_Bridge_HistoricalTransactionRecord: NSObject
 
