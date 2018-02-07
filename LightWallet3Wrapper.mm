@@ -399,7 +399,9 @@ using namespace cryptonote;
 										   payment_id:(NSString * __nullable)optl__payment_id_NSString
 											 priority:(uint32_t)simple_priority // this must be a number between (not including) 0 and 5
 												   fn:(void(^ __nonnull)(NSString * __nullable errStr,
-																		 NSString * __nullable serializedSignedTransactionString
+																		 NSString * __nullable serializedSignedTransactionString,
+																		 NSString * __nullable txHash,
+																		 uint64_t final_networkFee_UInt64
 																		 )
 													   )fn
 {
@@ -409,7 +411,9 @@ using namespace cryptonote;
 		fn(
 		   capitalized_errStr, // because errors are often passed lowercased
 		   //
-		   nil
+		   nil,
+		   nil,
+		   0
 	   );
 	};
 	//
@@ -509,7 +513,7 @@ using namespace cryptonote;
 		//
 		return true;
 	};
-	monero_transfer_utils::CreateSignedTxs_RetVals retVals;
+	wallet3_base::CreateTx_RetVals retVals;
 	BOOL r = _wallet__ptr->create_signed_transaction(
 		std::string(to_address.UTF8String),
 		std::string(amount_float_NSString.UTF8String),
@@ -525,9 +529,26 @@ using namespace cryptonote;
 		return;
 	}
 	NSAssert(r, @"Found unexpectedly didSucceed=false without an error"); // NOTE: unlike cpp code, asserting the positive here
-	NSString *signedSerializedTransaction_NSString = nil; // TODO: get this from retVals		boost::optional<tools::wallet2::signed_tx_set> signed_tx_set;
-
+	NSMutableArray *signedSerializedTransactionStrings = [NSMutableArray new];
+	NSMutableArray *txHashes = [NSMutableArray new];
+	uint64_t final_networkFee_UInt64 = 0; // writing this to only expect one, for now
+	{ // finalize
+		for (const auto& ptx: *retVals.pending_txs) {
+			[txHashes addObject:[NSString stringWithUTF8String:
+				epee::string_tools::pod_to_hex(cryptonote::get_transaction_hash(ptx.tx)).c_str()
+			]];
+			[signedSerializedTransactionStrings addObject:[NSString stringWithUTF8String:
+				epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx)).c_str()
+			]];
+			final_networkFee_UInt64 = ptx.fee;
+		}
+	}
+	NSAssert(signedSerializedTransactionStrings.count == 1, @"Light wallet: Unexpected number of transactions created");
+	NSAssert(txHashes.count == 1, @"Light wallet: Unexpected number of transactions ids returned");
+	// and since we only expect one tx... (for now)
+	NSString *signedSerializedTransactionString = [signedSerializedTransactionStrings firstObject];
+	NSString *txHash = [txHashes firstObject];
 	//
-	fn(nil, signedSerializedTransaction_NSString);
+	fn(nil, signedSerializedTransactionString, txHash, final_networkFee_UInt64);
 }
 @end

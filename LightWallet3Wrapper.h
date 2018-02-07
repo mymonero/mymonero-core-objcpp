@@ -109,7 +109,9 @@
 											 priority:(uint32_t)simple_priority // this must be a number between (not including) 0 and 5
 												   fn:(void(^ __nonnull)(
 																		 NSString * __nullable errStr,
-																		 NSString * __nullable serializedSignedTransactionString
+																		 NSString * __nullable serializedSignedTransactionString,
+																		 NSString * __nullable txHash,
+																		 uint64_t final_networkFee_UInt64
 															   )
 													   )fn;
 @end
