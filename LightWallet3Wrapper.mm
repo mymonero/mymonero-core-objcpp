@@ -39,7 +39,6 @@
 #include "include_base_utils.h"
 #include "cryptonote_basic.h"
 #include "cryptonote_basic_impl.h"
-#include "monero_key_utils.hpp"
 #include "monero_wallet_utils.hpp"
 #include "electrum-words.h"
 #include "mnemonics/english.h"
