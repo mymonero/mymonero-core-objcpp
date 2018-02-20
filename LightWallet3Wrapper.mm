@@ -43,6 +43,7 @@
 #include "electrum-words.h"
 #include "mnemonics/english.h"
 #include "monero_transfer_utils.hpp"
+#include <boost/optional.hpp>
 #include <future>
 //
 using namespace epee; // for string_tools
@@ -415,7 +416,7 @@ using namespace cryptonote;
 		dispatch_async(dispatch_get_main_queue(), ^
 		{ // must jump back to main thread to call fn
 			fn(
-			   capitalized_errStr, // because errors are often received from monero-src in lower case
+			   [capitalized_errStr copy], // because errors are often received from monero-src in lower case
 			   nil, nil, 0
 		   );
 		});
@@ -427,7 +428,7 @@ using namespace cryptonote;
 		return;
 	}
 	//
-	void (^ getRandomOuts__block)(NSArray * _Nonnull amountStrings, uint32_t count, NSValue *promiseInValue, void(^ cb)(NSString * _Nullable errStr_orNil, NSString * _Nullable response_jsonString, NSValue *returned_promiseInValue)) = self.getRandomOuts__block;
+	void (^ getRandomOuts__block)(NSArray * _Nonnull amountStrings, uint32_t count, void(^ cb)(NSString * _Nullable errStr_orNil, NSString * _Nullable response_jsonString)) = self.getRandomOuts__block;
 	if (getRandomOuts__block == nil) {
 		NSAssert(false, @"LightWallet3Wrapper.getRandomOuts__block must be set to construct a transaction");
 		_doFn_withErrStr(NSLocalizedString(@"Code fault", nil));
@@ -471,14 +472,13 @@ using namespace cryptonote;
 		}
   		uint32_t requested_outputs_count = this_wallet__ptr->requested_outputs_count(fake_outputs_count); // TODO: mymonero simple uses fake_outputs_count... use that instead?
 		//
-		// the following sequence must remain synchronous, therefore a promise is used; it must be given to objc-land
-		auto promise = std::promise<light_wallet3::get_rand_outs_promise_ret_vals>();
-		NSValue *promiseInValue = [NSValue valueWithBytes:&promise objCType:@encode(std::promise<int>)];
+		// the following sequence must remain synchronous, so a promise is used:
+		__block auto promise = std::promise<light_wallet3::get_rand_outs_promise_ret_vals>();
+		// and it must be able to be given to the block scope in objc-land below so __block is specified to share storage (NSValue wrapping promise passed through blocks to cb would be an alternative as long as promise is able to be taken by move, or else heap access after free will occur)
 		getRandomOuts__block(
 			amountStrings,
 			requested_outputs_count,
-			promiseInValue, // using an NSValue means ownership will not be transferred
-			^(NSString *errStr_orNil, NSString *response_jsonString, NSValue *returned_promiseInValue)
+			^(NSString *errStr_orNil, NSString *response_jsonString)
 			{
 				//
 				// here we should be on the main thread.. whatever Alamofire returns with
@@ -493,25 +493,21 @@ using namespace cryptonote;
 						promise_ret_vals.response_json_string = std::string(response_jsonString.UTF8String);
 					}
 				}
-				std::promise<light_wallet3::get_rand_outs_promise_ret_vals> returned_promise;
-				{ // finalize
-					[returned_promiseInValue getValue:&returned_promise];
-				}
-				returned_promise.set_value(promise_ret_vals);
+				// v-- captured
+				promise.set_value(promise_ret_vals);
 			}
 		);
 		//
-		// now having called returned_promise.set_value() by this point, (I think) we're back on self.operationQueue's thread
-		//
+		// now having called returned_promise.set_value(...) by this point, we're back on self.operationQueue's thread
 		std::future<light_wallet3::get_rand_outs_promise_ret_vals> future = promise.get_future();
-		light_wallet3::get_rand_outs_promise_ret_vals ret_vals = future.get();
-		if (ret_vals.did_error) {
+		light_wallet3::get_rand_outs_promise_ret_vals future__ret_vals = future.get();
+		if (future__ret_vals.did_error) {
 			fn_retVals.did_error = true;
-			fn_retVals.err_string = *ret_vals.err_string;
+			fn_retVals.err_string = *future__ret_vals.err_string;
 			return false;
 		}
 		light_wallet3_server_api::COMMAND_RPC_GET_RANDOM_OUTS::response ores;
-		bool r = epee::serialization::load_t_from_json(ores, *ret_vals.response_json_string);
+		bool r = epee::serialization::load_t_from_json(ores, *future__ret_vals.response_json_string);
 		if (!r) {
 			return false;
 		}
@@ -519,53 +515,63 @@ using namespace cryptonote;
 		r = this_wallet__ptr->populate_from__get_random_outs(ores, outs, selected_transfers, fake_outputs_count, requested_outputs_count, populate_retVals);
 		if (!r) {
 			fn_retVals.did_error = true;
-			fn_retVals.err_string = *populate_retVals.err_string;
+			fn_retVals.err_string = std::move(*populate_retVals.err_string);
 			return false;
 		}
 		//
 		return true;
 	};
 	[self.operationQueue addOperationWithBlock:^{
-		wallet3_base::CreateTx_RetVals retVals;
-		BOOL r = _wallet__ptr->create_signed_transaction(
-			std::string(to_address.UTF8String),
-			std::string(amount_float_NSString.UTF8String),
-			optl__payment_id_string_ptr,
-			simple_priority,
-			get_random_outs_fn,
+		try {
+			wallet3_base::CreateTx_RetVals retVals;
+			BOOL r = _wallet__ptr->create_signed_transaction(
+				std::string(to_address.UTF8String),
+				std::string(amount_float_NSString.UTF8String),
+				optl__payment_id_string_ptr,
+				simple_priority,
+				get_random_outs_fn,
+				//
+				retVals
+			);
+			if (retVals.did_error) {
+				NSString *errStr = [NSString stringWithUTF8String:(*(retVals.err_string)).c_str()];
+				_doFn_withErrStr(errStr);
+				return;
+			}
+			NSAssert(r, @"Found unexpectedly didSucceed=false without an error"); // NOTE: unlike cpp code, asserting the positive here
+			NSMutableArray *signedSerializedTransactionStrings = [NSMutableArray new];
+			NSMutableArray *txHashes = [NSMutableArray new];
+			uint64_t final_networkFee_UInt64 = -1; // writing this to only expect one, for now
+			{ // finalize
+				for (const auto& ptx: *retVals.pending_txs) {
+					[txHashes addObject:[NSString stringWithUTF8String:
+						epee::string_tools::pod_to_hex(cryptonote::get_transaction_hash(ptx.tx)).c_str()
+					]];
+					[signedSerializedTransactionStrings addObject:[NSString stringWithUTF8String:
+						epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx)).c_str()
+					]];
+					// TODO: fix.. currently 0
+					final_networkFee_UInt64 = ptx.fee;
+				}
+			}
+			// TODO
+//			NSAssert(final_networkFee_UInt64 != -1 && final_networkFee_UInt64 != 0, @"LightWallet3Wrapper: Reported fee not initialized, or 0");
+			NSAssert(signedSerializedTransactionStrings.count == 1, @"LightWallet3Wrapper: Unexpected number of transactions created");
+			NSAssert(txHashes.count == 1, @"LightWallet3Wrapper: Unexpected number of transactions ids returned");
+			// and since we only expect one tx... (for now)
+			NSString *signedSerializedTransactionString = [signedSerializedTransactionStrings firstObject];
+			NSString *txHash = [txHashes firstObject];
+			// NOTE: the above are explicitly copied to bring memory over to main thread
 			//
-			retVals
-		);
-		if (retVals.did_error) {
-			NSString *errStr = [NSString stringWithUTF8String:(*(retVals.err_string)).c_str()];
-			_doFn_withErrStr(errStr);
+			dispatch_async(dispatch_get_main_queue(), ^
+			{ // must jump back to main thread to call fn
+				fn(nil, signedSerializedTransactionString, txHash, final_networkFee_UInt64);
+			});
+		} catch (const std::exception& e) {
+			_doFn_withErrStr([NSString stringWithUTF8String:e.what()]); // TODO: relay anything else? code?
 			return;
 		}
-		NSAssert(r, @"Found unexpectedly didSucceed=false without an error"); // NOTE: unlike cpp code, asserting the positive here
-		NSMutableArray *signedSerializedTransactionStrings = [NSMutableArray new];
-		NSMutableArray *txHashes = [NSMutableArray new];
-		uint64_t final_networkFee_UInt64 = 0; // writing this to only expect one, for now
-		{ // finalize
-			for (const auto& ptx: *retVals.pending_txs) {
-				[txHashes addObject:[NSString stringWithUTF8String:
-					epee::string_tools::pod_to_hex(cryptonote::get_transaction_hash(ptx.tx)).c_str()
-				]];
-				[signedSerializedTransactionStrings addObject:[NSString stringWithUTF8String:
-					epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx)).c_str()
-				]];
-				final_networkFee_UInt64 = ptx.fee;
-			}
-		}
-		NSAssert(signedSerializedTransactionStrings.count == 1, @"Light wallet: Unexpected number of transactions created");
-		NSAssert(txHashes.count == 1, @"Light wallet: Unexpected number of transactions ids returned");
-		// and since we only expect one tx... (for now)
-		NSString *signedSerializedTransactionString = [signedSerializedTransactionStrings firstObject];
-		NSString *txHash = [txHashes firstObject];
-		//
-		dispatch_async(dispatch_get_main_queue(), ^
-		{ // must jump back to main thread to call fn
-			fn(nil, signedSerializedTransactionString, txHash, final_networkFee_UInt64);
-		});
+
 	}];
 }
 @end

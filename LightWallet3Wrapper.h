@@ -95,11 +95,9 @@
 @property (nonatomic, copy) void (^ _Nullable getRandomOuts__block)(
 	NSArray * _Nonnull amountStrings,
 	uint32_t count,
-	NSValue * _Nonnull promiseInValue,
 	void(^ _Nonnull cb)(
 		NSString * _Nullable errStr_orNil,
-		NSString * _Nullable response_jsonString,
-		NSValue * _Nonnull returned_promiseInValue
+		NSString * _Nullable response_jsonString
 	)
 );
 
