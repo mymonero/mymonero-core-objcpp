@@ -37,6 +37,7 @@
 #include "monero_paymentID_utils.hpp"
 #include "monero_transfer_utils.hpp"
 #include "monero_key_image_utils.hpp"
+#include "monero_fork_rules.hpp"
 //
 #include "string_tools.h"
 using namespace epee;
@@ -400,14 +401,52 @@ using namespace epee;
 	).c_str()];
 }
 //
-- (uint32_t)fixedRingsize
++ (uint32_t)fixedRingsize
 {
 	return monero_transfer_utils::fixed_ringsize();
 }
-- (uint32_t)fixedMixinsize
++ (uint32_t)fixedMixinsize
 {
 	return monero_transfer_utils::fixed_mixinsize();
 }
++ (uint32_t)default_priority
+{
+	return 1;
+}
+//
++ (uint64_t)estimatedTxNetworkFeeWithFeePerKB:(uint64_t)fee_per_kb
+	priority:(uint32_t)priority
+{
+	bool is_testnet = false;
+	monero_transfer_utils::use_fork_rules_fn_type use_fork_rules_fn = [
+		is_testnet
+	] (
+		uint8_t version,
+		int64_t early_blocks
+	) -> bool {
+		// This is temporary until we have the fork rules supplied by the server
+		if (version >= monero_fork_rules::get_bulletproof_fork(is_testnet)) {
+			return false;
+		}
+		return true;
+	};
+	uint64_t fee_multiplier = monero_transfer_utils::get_fee_multiplier(
+		priority,
+		[self default_priority],
+		monero_transfer_utils::get_fee_algorithm(use_fork_rules_fn),
+		use_fork_rules_fn
+	);
+	std::vector<uint8_t> extra; // blank extra
+	bool bulletproof = false; // for now...
+	uint64_t estimated_fee = monero_transfer_utils::calculate_fee(
+		fee_per_kb,
+		monero_transfer_utils::estimate_rct_tx_size(2, [self fixedMixinsize], 2, extra.size(), bulletproof),
+		fee_multiplier
+	);
+	
+	return estimated_fee;
+}
+
 //
 - (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet
 {

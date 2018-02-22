@@ -116,8 +116,12 @@
 //
 - (NSString *)new_fakeAddressForRCTTx;
 //
-- (uint32_t)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
-- (uint32_t)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
++ (uint32_t)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
++ (uint32_t)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
+//
++ (uint32_t)default_priority;
++ (uint64_t)estimatedTxNetworkFeeWithFeePerKB:(uint64_t)fee_per_kb
+	priority:(uint32_t)priority;
 //
 - (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
 				sec_spendKey:(NSString *)sec_spendKey_NSString

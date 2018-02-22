@@ -45,6 +45,7 @@
 #include "monero_transfer_utils.hpp"
 #include <boost/optional.hpp>
 #include <future>
+#include "MyMoneroCore_ObjCpp.h"
 //
 using namespace epee; // for string_tools
 using namespace tools;
@@ -97,6 +98,7 @@ using namespace cryptonote;
 			false/*testnet*/,
 			false/*restricted*/
 		);
+		_wallet__ptr->set_default_priority([MyMoneroCore_ObjCpp default_priority]);
 //		_wallet__ptr->callback(self); // TODO
 		if (!_wallet__ptr) {
 			return nil;
