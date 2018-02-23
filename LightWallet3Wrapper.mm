@@ -98,7 +98,7 @@ using namespace cryptonote;
 			false/*testnet*/,
 			false/*restricted*/
 		);
-		_wallet__ptr->set_default_priority([MyMoneroCore_ObjCpp default_priority]);
+		_wallet__ptr->set_default_priority([MyMoneroCore_ObjCpp default_priority]/*this is set to 2 rather than 1 as in monero-src; see method for more notes*/);
 //		_wallet__ptr->callback(self); // TODO
 		if (!_wallet__ptr) {
 			return nil;
@@ -523,7 +523,8 @@ using namespace cryptonote;
 		//
 		return true;
 	};
-	[self.operationQueue addOperationWithBlock:^{
+	[self.operationQueue addOperationWithBlock:^
+	{
 		try {
 			wallet3_base::CreateTx_RetVals retVals;
 			BOOL r = _wallet__ptr->create_signed_transaction(

@@ -45,6 +45,11 @@
 
 @end
 //
+extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_Low;
+extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_MedLow;
+extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_MedHigh;
+extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
+//
 @interface MyMoneroCore_ObjCpp : NSObject
 //
 // Return value dictionary keys

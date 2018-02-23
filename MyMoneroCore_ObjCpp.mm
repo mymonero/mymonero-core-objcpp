@@ -51,6 +51,15 @@ using namespace epee;
 @end
 //
 //
+// Constants
+//
+// TODO: obtain these from C++ declns somehow
+uint32_t const MyMoneroCore_ObjCpp_SimplePriority_Low = 1;
+uint32_t const MyMoneroCore_ObjCpp_SimplePriority_MedLow = 2;
+uint32_t const MyMoneroCore_ObjCpp_SimplePriority_MedHigh = 3;
+uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
+//
+//
 // Principal type
 //
 @implementation MyMoneroCore_ObjCpp
@@ -411,7 +420,7 @@ using namespace epee;
 }
 + (uint32_t)default_priority
 {
-	return 1;
+	return MyMoneroCore_ObjCpp_SimplePriority_MedLow; // this is set to 2 rather than 1 as in monero-src; this value 2 corresponds to .mlow in Swift-land; it's chosen to maintain speediness for lightwallet use-cases as a default and can always be set down to 1 as desired
 }
 //
 + (uint64_t)estimatedTxNetworkFeeWithFeePerKB:(uint64_t)fee_per_kb
@@ -438,9 +447,10 @@ using namespace epee;
 	);
 	std::vector<uint8_t> extra; // blank extra
 	bool bulletproof = false; // for now...
+	size_t est_tx_size = monero_transfer_utils::estimate_rct_tx_size(2, [self fixedMixinsize], 2, extra.size(), bulletproof); // typically ~14kb post-rct, pre-bulletproofs
 	uint64_t estimated_fee = monero_transfer_utils::calculate_fee(
 		fee_per_kb,
-		monero_transfer_utils::estimate_rct_tx_size(2, [self fixedMixinsize], 2, extra.size(), bulletproof),
+		est_tx_size,
 		fee_multiplier
 	);
 	
