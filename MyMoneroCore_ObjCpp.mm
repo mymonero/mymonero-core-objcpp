@@ -75,7 +75,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 }
 //
 // Instance
-- (BOOL)newlyCreatedWallet:(NSString *)wordsetName
++ (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
 							 NSString *errStr_orNil,
@@ -151,7 +151,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 }
 //
 //
-- (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
++ (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
 						mnemonicWordsetName:(NSString *)wordsetName
 {
 	std::string sec_hexString = std::string(seed_NSString.UTF8String);
@@ -194,7 +194,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	};
 }
 //
-- (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
++ (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
 				  	wordsetName:(NSString *)wordsetName
 							 fn:(void (^)
 								 (
@@ -275,7 +275,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	return YES;
 }
 //
-- (void)verifiedComponentsForOpeningExistingWalletWithAddress:(NSString *)address_NSString
++ (void)verifiedComponentsForOpeningExistingWalletWithAddress:(NSString *)address_NSString
 												 sec_viewKey:(NSString *)sec_viewKey_NSString
 							   sec_spendKey_orNilForViewOnly:(NSString *)sec_spendKey_NSString_orNil
 											  sec_seed_orNil:(NSString *)sec_seed_NSString_orNil
@@ -357,7 +357,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	);
 }
 //
-- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet
++ (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet
 {
 	Monero_DecodedAddress_RetVals *retVals = [Monero_DecodedAddress_RetVals new];
 	//
@@ -389,21 +389,14 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	return retVals;
 }
 
-- (NSString *)new_long_plain_paymentID
-{
-	return [NSString stringWithUTF8String:string_tools::pod_to_hex(
-		monero_paymentID_utils::new_long_plain_paymentID()
-	).c_str()];	
-}
-
-- (NSString *)new_short_plain_paymentID
++ (NSString *)new_short_plain_paymentID
 {
 	return [NSString stringWithUTF8String:string_tools::pod_to_hex(
 		monero_paymentID_utils::new_short_plain_paymentID()
 	).c_str()];
 }
 
-- (NSString *)new_fakeAddressForRCTTx
++ (NSString *)new_fakeAddressForRCTTx
 {
 	return [NSString stringWithUTF8String:monero_transfer_utils::new_dummy_address_string_for_rct_tx(
 		false // isTestnet
@@ -458,7 +451,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 }
 
 //
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet
++ (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet
 {
 	std::string payment_id__string = std::string(short_paymentID.UTF8String);
 	crypto::hash8 payment_id_short;
@@ -484,7 +477,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	//
 	return int_address_NSString;
 }
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID // mainnet
++ (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID // mainnet
 {
 	return [self
 		new_integratedAddrFromStdAddr:std_address_NSString
@@ -492,7 +485,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 		isTestnet:NO];
 }
 //
-- (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
++ (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
 							 sec_spendKey:(NSString *)sec_spendKey_NSString
 							  sec_viewKey:(NSString *)sec_viewKey_NSString
 							 pub_spendKey:(NSString *)pub_spendKey_NSString

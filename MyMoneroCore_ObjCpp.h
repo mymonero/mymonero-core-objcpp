@@ -57,7 +57,7 @@ extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
 + (NSString *)retValDictKey__Value; // used for single value returns… you should force-cast the type… e.g. "as! String" for -mnemonicStringFromSeedHex:…
 //
 //
-- (BOOL)newlyCreatedWallet:(NSString *)wordsetName
++ (BOOL)newlyCreatedWallet:(NSString *)wordsetName
 						fn:(void (^)
 							(
 							 NSString *errStr_orNil,
@@ -72,10 +72,10 @@ extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
 							 )
 							)fn;
 
-- (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
++ (NSDictionary *)mnemonicStringFromSeedHex:(NSString *)seed_NSString
 						mnemonicWordsetName:(NSString *)wordsetName;
 
-- (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
++ (BOOL)seedAndKeysFromMnemonic:(NSString *)mnemonic_NSString
 					wordsetName:(NSString *)wordsetName
 							 fn:(void (^)
 								 (
@@ -91,12 +91,12 @@ extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
 								  )
 								 )fn;
 
--(void)verifiedComponentsForOpeningExistingWalletWithAddress:(NSString *)address_NSString
-												 sec_viewKey:(NSString *)sec_viewKey
-							   sec_spendKey_orNilForViewOnly:(NSString *)sec_spendKey_orNilForViewOnly
-											  sec_seed_orNil:(NSString *)sec_seed_NSString_orNil
-									wasANewlyGeneratedWallet:(BOOL)wasANewlyGeneratedWallet
-														  fn:(void (^)
++ (void)verifiedComponentsForOpeningExistingWalletWithAddress:(NSString *)address_NSString
+												  sec_viewKey:(NSString *)sec_viewKey
+							    sec_spendKey_orNilForViewOnly:(NSString *)sec_spendKey_orNilForViewOnly
+											   sec_seed_orNil:(NSString *)sec_seed_NSString_orNil
+									 wasANewlyGeneratedWallet:(BOOL)wasANewlyGeneratedWallet
+														   fn:(void (^)
 															  (
 															   NSString *errStr_orNil,
 															   // OR
@@ -111,15 +111,14 @@ extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
 															   )
 															  )fn;
 //
-- (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet;
++ (Monero_DecodedAddress_RetVals *)decodedAddress:(NSString *)addressString isTestnet:(BOOL)isTestnet;
 //
-- (NSString *)new_long_plain_paymentID;
-- (NSString *)new_short_plain_paymentID;
++ (NSString *)new_short_plain_paymentID;
 //
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet;
-- (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID; // mainnet
++ (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID isTestnet:(BOOL)isTestnet;
++ (NSString *)new_integratedAddrFromStdAddr:(NSString *)std_address_NSString andShortPID:(NSString *)short_paymentID; // mainnet
 //
-- (NSString *)new_fakeAddressForRCTTx;
++ (NSString *)new_fakeAddressForRCTTx;
 //
 + (uint32_t)fixedRingsize; // NOTE: This is not the mixin, which would be fixedRingsize-1
 + (uint32_t)fixedMixinsize; // NOTE: This is not the ringsize, which would be fixedMixin+1
@@ -128,7 +127,7 @@ extern uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High;
 + (uint64_t)estimatedTxNetworkFeeWithFeePerKB:(uint64_t)fee_per_kb
 	priority:(uint32_t)priority;
 //
-- (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
++ (NSString *)new_keyImageFrom_tx_pub_key:(NSString *)tx_pub_key_NSString
 				sec_spendKey:(NSString *)sec_spendKey_NSString
 				sec_viewKey:(NSString *)sec_viewKey_NSString
 				pub_spendKey:(NSString *)pub_spendKey_NSString
