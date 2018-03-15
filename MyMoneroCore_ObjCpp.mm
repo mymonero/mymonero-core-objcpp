@@ -38,6 +38,7 @@
 #include "monero_transfer_utils.hpp"
 #include "monero_key_image_utils.hpp"
 #include "monero_fork_rules.hpp"
+#include "monero_legacy16B_keys.hpp"
 //
 #include "string_tools.h"
 using namespace epee;
@@ -362,7 +363,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 	Monero_DecodedAddress_RetVals *retVals = [Monero_DecodedAddress_RetVals new];
 	//
 	cryptonote::address_parse_info info;
-	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet, std::string(addressString.UTF8String));
+	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet ? cryptonote::TESTNET : cryptonote::MAINNET, std::string(addressString.UTF8String));
 	if (didSucceed == false) {
 		retVals.errStr_orNil = NSLocalizedString(@"Invalid address", nil);
 		//
@@ -460,7 +461,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 		return nil;
 	}
 	cryptonote::address_parse_info info;
-	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet, std::string(std_address_NSString.UTF8String));
+	bool didSucceed = cryptonote::get_account_address_from_str(info, isTestnet ? cryptonote::TESTNET : cryptonote::MAINNET, std::string(std_address_NSString.UTF8String));
 	if (didSucceed == false) {
 		return nil;
 	}
@@ -469,7 +470,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 		return nil; // that was not a std_address!
 	}
 	std::string int_address_string = cryptonote::get_account_integrated_address_as_str(
-		isTestnet,
+		isTestnet ? cryptonote::TESTNET : cryptonote::MAINNET,
 		info.address,
 		payment_id_short
 	);

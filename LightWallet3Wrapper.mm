@@ -318,7 +318,7 @@ using namespace cryptonote;
 	}
 	return [NSString stringWithUTF8String:
 		_wallet__ptr->get_account().get_public_address_str(
-			_wallet__ptr->testnet()
+			_wallet__ptr->testnet() ? cryptonote::TESTNET : cryptonote::MAINNET
 		).c_str()
 	];
 }
