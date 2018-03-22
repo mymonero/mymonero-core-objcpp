@@ -95,7 +95,7 @@ using namespace cryptonote;
 	}
 	{
 		_wallet__ptr = new tools::light_wallet3(
-			false/*testnet*/,
+			cryptonote::MAINNET,
 			false/*restricted*/
 		);
 		_wallet__ptr->set_default_priority([MyMoneroCore_ObjCpp default_priority]/*this is set to 2 rather than 1 as in monero-src; see method for more notes*/);
@@ -282,7 +282,7 @@ using namespace cryptonote;
 		NSAssert(false, @"nil _wallet__ptr || !self.hasLWBeenInitialized");
 		return 1;
 	}
-	return _wallet__ptr->blockchain_height();
+	return _wallet__ptr->get_light_wallet_blockchain_height();
 }
 
 - (uint64_t)locked_balance
@@ -318,7 +318,7 @@ using namespace cryptonote;
 	}
 	return [NSString stringWithUTF8String:
 		_wallet__ptr->get_account().get_public_address_str(
-			_wallet__ptr->testnet() ? cryptonote::TESTNET : cryptonote::MAINNET
+			_wallet__ptr->nettype()
 		).c_str()
 	];
 }

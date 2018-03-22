@@ -43,7 +43,7 @@
 #include "string_tools.h"
 using namespace epee;
 //
-#include "wallet2_transfer_utils.h"
+#include "wallet2-BORROWED.h"
 //
 //
 // Accessory types
@@ -428,7 +428,7 @@ uint32_t const MyMoneroCore_ObjCpp_SimplePriority_High = 4;
 		int64_t early_blocks
 	) -> bool {
 		// This is temporary until we have the fork rules supplied by the server
-		if (version >= monero_fork_rules::get_bulletproof_fork(is_testnet)) {
+		if (version >= monero_fork_rules::get_bulletproof_fork()) {
 			return false;
 		}
 		return true;
